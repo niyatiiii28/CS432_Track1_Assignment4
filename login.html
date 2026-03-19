@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>ShuttleGo – Login</title>
+  <style>
+    :root { --primary:#1a56db; --primary-dark:#1e429f; --accent:#ff6b35;
+            --bg:#f0f4ff; --danger:#e02424; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Segoe UI',sans-serif; background:var(--bg);
+           min-height:100vh; display:flex; align-items:center; justify-content:center; }
+    .container {
+      background:#fff; border-radius:14px; padding:40px 36px;
+      width:min(420px,92vw); box-shadow:0 8px 40px rgba(26,86,219,.12);
+      border:1px solid #dbeafe;
+    }
+    .logo { text-align:center; margin-bottom:28px; }
+    .logo .icon { font-size:2.5rem; }
+    .logo h1 { font-size:1.6rem; font-weight:800; color:var(--primary-dark); margin-top:4px; }
+    .logo h1 span { color:var(--accent); }
+    .logo p { color:#6b7280; font-size:.85rem; margin-top:4px; }
+    .form-group { margin-bottom:16px; }
+    label { display:block; font-size:.82rem; font-weight:600; margin-bottom:6px; color:#374151; }
+    input {
+      width:100%; padding:10px 14px; border:1px solid #d1d5db;
+      border-radius:8px; font-size:.9rem; outline:none; transition:border .15s;
+    }
+    input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(26,86,219,.1); }
+    .btn-login {
+      width:100%; padding:11px; background:var(--primary); color:#fff;
+      border:none; border-radius:8px; font-size:.95rem; font-weight:600;
+      cursor:pointer; transition:background .15s; margin-top:6px;
+    }
+    .btn-login:hover { background:var(--primary-dark); }
+    .error-msg {
+      background:#fee2e2; border:1px solid #fca5a5; color:#991b1b;
+      padding:10px 14px; border-radius:7px; font-size:.85rem; margin-bottom:14px;
+      display:none;
+    }
+    .hint {
+      background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;
+      padding:12px 14px; margin-top:20px; font-size:.78rem; color:#1e40af;
+    }
+    .hint strong { display:block; margin-bottom:4px; }
+    .hint code { background:#dbeafe; padding:1px 5px; border-radius:4px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="icon">🚌</div>
+    <h1>Shuttle<span>Go</span></h1>
+    <p>Shuttle Management System</p>
+  </div>
+
+  <div class="error-msg" id="err"></div>
+
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="Enter username" autocomplete="off"/>
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter password"
+           onkeydown="if(event.key==='Enter') doLogin()"/>
+  </div>
+  <button class="btn-login" onclick="doLogin()" id="loginBtn">Sign In</button>
+
+  <div class="hint">
+    <strong>🔑 Demo Credentials</strong>
+    Admin: <code>admin</code> / <code>admin123</code><br>
+    User:  <code>rajesh</code> / <code>user123</code>&nbsp;&nbsp;
+           <code>suresh</code> / <code>user123</code>
+  </div>
+</div>
+
+<script>
+async function doLogin() {
+  const btn  = document.getElementById('loginBtn');
+  const err  = document.getElementById('err');
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value;
+
+  err.style.display = 'none';
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      window.location.href = '/dashboard';
+    } else {
+      err.textContent = data.error || 'Login failed';
+      err.style.display = 'block';
+    }
+  } catch(e) {
+    err.textContent = 'Network error';
+    err.style.display = 'block';
+  }
+  btn.textContent = 'Sign In';
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>

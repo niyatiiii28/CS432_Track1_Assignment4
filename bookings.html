@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Bookings – ShuttleGo{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>🎫 Bookings</h1>
+  {% if role == 'admin' %}
+  <span class="tag tag-red">Admin — All Bookings Visible</span>
+  {% else %}
+  <span class="tag tag-blue">Your Bookings Only</span>
+  {% endif %}
+</div>
+<div class="content">
+  {% if role != 'admin' %}
+  <div class="alert alert-info mb-4">
+    🔒 You can view and cancel your own bookings. Admins can manage all bookings.
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="flex-between mb-4">
+      <div class="card-title" style="margin:0">Booking Records</div>
+      <button class="btn btn-primary btn-sm" onclick="openBookModal()">+ New Booking</button>
+    </div>
+    <div id="bookingsTable"><div class="text-muted">Loading…</div></div>
+  </div>
+</div>
+
+<!-- New Booking Modal -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal">
+    <div class="modal-title">🎫 New Booking</div>
+    <div class="form-group">
+      <label>Trip ID</label>
+      <input class="form-control" id="b-trip" type="number" placeholder="Enter Trip ID"/>
+    </div>
+    <div class="form-group">
+      <label>Seat Number</label>
+      <input class="form-control" id="b-seat" type="number" placeholder="1–50"/>
+    </div>
+    {% if role == 'admin' %}
+    <div class="form-group">
+      <label>Passenger ID (Admin)</label>
+      <input class="form-control" id="b-pass" type="number" placeholder="Passenger ID"/>
+    </div>
+    {% endif %}
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('bookModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createBooking()">Book</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const IS_ADMIN = '{{ role }}' === 'admin';
+
+(async () => {
+  const bookings = await apiFetch('/api/bookings').catch(()=>[]);
+  renderBookings(bookings);
+})();
+
+function renderBookings(data) {
+  if (!data.length) {
+    document.getElementById('bookingsTable').innerHTML = '<div class="text-muted">No bookings found.</div>';
+    return;
+  }
+  document.getElementById('bookingsTable').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>ID</th>
+        ${IS_ADMIN ? '<th>Passenger</th>' : ''}
+        <th>Route</th><th>Date</th><th>Seat</th>
+        <th>Fare</th><th>Status</th><th>QR</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        ${data.map(b=>`<tr>
+          <td>#${b.BookingID}</td>
+          ${IS_ADMIN ? `<td>${b.PassengerName||'—'}</td>` : ''}
+          <td>${b.RouteName||'—'}</td>
+          <td>${b.TripDate||'—'}</td>
+          <td>${b.SeatNumber}</td>
+          <td>₹${b.FareAmount}</td>
+          <td>${bookingTag(b.BookingStatus)}</td>
+          <td><span class="tag tag-gray" style="font-family:monospace;font-size:.65rem">${b.QRCode.slice(0,18)}…</span></td>
+          <td>
+            ${b.BookingStatus==='Confirmed'?
+              `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.BookingID})">Cancel</button>`
+              : '—'}
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function cancelBooking(id) {
+  if (!confirm(`Cancel booking #${id}?`)) return;
+  try {
+    await apiFetch(`/api/bookings/${id}`, { method:'DELETE' });
+    toast(`Booking #${id} cancelled`, 'success');
+    const bookings = await apiFetch('/api/bookings');
+    renderBookings(bookings);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function openBookModal() { document.getElementById('bookModal').classList.add('open'); }
+function closeModal(id)  { document.getElementById(id).classList.remove('open'); }
+
+async function createBooking() {
+  const body = {
+    TripID: +document.getElementById('b-trip').value,
+    SeatNumber: +document.getElementById('b-seat').value,
+  };
+  const passEl = document.getElementById('b-pass');
+  if (passEl) body.PassengerID = +passEl.value;
+
+  try {
+    const r = await apiFetch('/api/bookings', { method:'POST', body: JSON.stringify(body) });
+    toast(`Booking #${r.BookingID} created! QR: ${r.QRCode}`, 'success');
+    closeModal('bookModal');
+    const bookings = await apiFetch('/api/bookings');
+    renderBookings(bookings);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function bookingTag(s) {
+  const m={Confirmed:'green',Cancelled:'red',Completed:'blue',NoShow:'yellow'};
+  return `<span class="tag tag-${m[s]||'gray'}">${s}</span>`;
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o =>
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+</script>
+{% endblock %}

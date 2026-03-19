@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Members – ShuttleGo{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>👥 Member Portfolio</h1>
+  <div style="display:flex;gap:10px;align-items:center">
+    <input class="form-control" style="width:220px" id="searchInput" placeholder="🔍 Search members…" oninput="filterMembers()">
+    {% if role == 'admin' %}
+    <button class="btn btn-primary" onclick="openCreateModal()">+ Add Member</button>
+    {% endif %}
+  </div>
+</div>
+<div class="content">
+
+  {% if role != 'admin' %}
+  <div class="alert alert-info mb-4">
+    🔒 <strong>Restricted view:</strong> Contact details are visible only for your own profile. Admins see all details.
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div id="membersTable"><div class="text-muted">Loading members…</div></div>
+  </div>
+</div>
+
+<!-- Member Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-title">👤 Member Profile</div>
+    <div id="modalContent"></div>
+    <div class="modal-footer">
+      {% if role == 'admin' %}
+      <button class="btn btn-danger btn-sm" id="btnDeleteMember" onclick="deleteMember()">🗑 Delete</button>
+      {% endif %}
+      <button class="btn btn-outline" onclick="closeModal('detailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Member Modal (Admin only) -->
+{% if role == 'admin' %}
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-title">➕ Add New Member</div>
+    <div class="grid-2">
+      <div class="form-group"><label>Member ID</label><input class="form-control" id="c-mid" type="number"/></div>
+      <div class="form-group"><label>Full Name</label><input class="form-control" id="c-name"/></div>
+      <div class="form-group"><label>Age</label><input class="form-control" id="c-age" type="number"/></div>
+      <div class="form-group"><label>Gender</label>
+        <select class="form-control" id="c-gender">
+          <option>Male</option><option>Female</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Email</label><input class="form-control" id="c-email" type="email"/></div>
+      <div class="form-group"><label>Contact</label><input class="form-control" id="c-contact"/></div>
+      <div class="form-group"><label>Type</label>
+        <select class="form-control" id="c-type">
+          <option>Passenger</option><option>Driver</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Reg. Date</label><input class="form-control" id="c-date" type="date"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createMember()">Create</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const IS_ADMIN = '{{ role }}' === 'admin';
+let allMembers = [];
+let currentMemberID = null;
+
+(async () => {
+  allMembers = await apiFetch('/api/members').catch(()=>[]);
+  renderTable(allMembers);
+})();
+
+function renderTable(data) {
+  if (!data.length) {
+    document.getElementById('membersTable').innerHTML = '<div class="text-muted">No members found.</div>';
+    return;
+  }
+  document.getElementById('membersTable').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Name</th><th>Type</th><th>Email</th>
+        <th>Contact</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        ${data.map(m => `<tr>
+          <td>#${m.MemberID}</td>
+          <td><strong>${m.Name}</strong></td>
+          <td><span class="tag ${m.MemberType==='Driver'?'tag-blue':'tag-green'}">${m.MemberType}</span></td>
+          <td>${m.Email}</td>
+          <td>${m.ContactNumber}</td>
+          <td><span class="tag ${statusColor(m.Status_)}">${m.Status_||'—'}</span></td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="viewMember(${m.MemberID})">👁 View</button>
+            ${IS_ADMIN ? `<button class="btn btn-danger btn-sm" onclick="deleteMember(${m.MemberID})">🗑</button>` : ''}
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function filterMembers() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderTable(allMembers.filter(m =>
+    m.Name.toLowerCase().includes(q) ||
+    m.Email.toLowerCase().includes(q) ||
+    m.MemberType.toLowerCase().includes(q)
+  ));
+}
+
+async function viewMember(id) {
+  currentMemberID = id;
+  document.getElementById('modalContent').innerHTML = '<div class="text-muted">Loading…</div>';
+  document.getElementById('detailModal').classList.add('open');
+  try {
+    const m = await apiFetch(`/api/members/${id}`);
+    document.getElementById('modalContent').innerHTML = `
+      <div class="grid-2" style="gap:12px;font-size:.88rem">
+        <div><span class="text-muted">Name</span><br><strong>${m.Name}</strong></div>
+        <div><span class="text-muted">Type</span><br><span class="tag ${m.MemberType==='Driver'?'tag-blue':'tag-green'}">${m.MemberType}</span></div>
+        <div><span class="text-muted">Email</span><br>${m.Email}</div>
+        <div><span class="text-muted">Contact</span><br>${m.ContactNumber}</div>
+        <div><span class="text-muted">Age / Gender</span><br>${m.Age} / ${m.Gender}</div>
+        <div><span class="text-muted">Registered</span><br>${m.RegistrationDate}</div>
+        ${m.MemberType==='Driver' ? `
+        <div><span class="text-muted">License</span><br>${m.LicenseNumber||'—'}</div>
+        <div><span class="text-muted">Rating</span><br>⭐ ${m.Rating||'—'}</div>
+        <div><span class="text-muted">Experience</span><br>${m.ExperienceYears||'—'} yrs</div>
+        <div><span class="text-muted">Driver Status</span><br>${m.DriverStatus||'—'}</div>
+        ` : `
+        <div><span class="text-muted">Payment Pref.</span><br>${m.PreferredPaymentMethod||'—'}</div>
+        <div><span class="text-muted">Special Assist.</span><br>${m.SpecialAssistance||'None'}</div>
+        <div><span class="text-muted">Passenger Status</span><br>${m.PassengerStatus||'—'}</div>
+        `}
+      </div>`;
+  } catch(e) {
+    document.getElementById('modalContent').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+  }
+}
+
+async function deleteMember(id) {
+  id = id || currentMemberID;
+  if (!id || !confirm(`Delete member #${id}? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/api/members/${id}`, { method: 'DELETE' });
+    toast(`Member #${id} deleted`, 'success');
+    closeModal('detailModal');
+    allMembers = allMembers.filter(m => m.MemberID !== id);
+    renderTable(allMembers);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function openCreateModal() {
+  document.getElementById('c-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('createModal').classList.add('open');
+}
+
+async function createMember() {
+  const body = {
+    MemberID: +document.getElementById('c-mid').value,
+    Name: document.getElementById('c-name').value,
+    Age: +document.getElementById('c-age').value,
+    Gender: document.getElementById('c-gender').value,
+    Email: document.getElementById('c-email').value,
+    ContactNumber: document.getElementById('c-contact').value,
+    MemberType: document.getElementById('c-type').value,
+    RegistrationDate: document.getElementById('c-date').value,
+  };
+  try {
+    await apiFetch('/api/members', { method:'POST', body: JSON.stringify(body) });
+    toast('Member created!', 'success');
+    closeModal('createModal');
+    allMembers = await apiFetch('/api/members');
+    renderTable(allMembers);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o =>
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+function statusColor(s) {
+  if(!s) return 'tag-gray';
+  const m={Active:'tag-green',Inactive:'tag-gray',Suspended:'tag-red',
+           Available:'tag-green','On-Trip':'tag-blue','Off-Duty':'tag-yellow'};
+  return m[s]||'tag-gray';
+}
+</script>
+{% endblock %}

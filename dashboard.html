@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – ShuttleGo{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>📊 Dashboard</h1>
+  <span class="text-muted">Welcome back, <strong>{{ username }}</strong></span>
+</div>
+<div class="content">
+
+  <div class="grid-4 mb-4" id="statsGrid">
+    <div class="stat-card"><div class="label">Total Members</div><div class="value" id="s-members">—</div></div>
+    <div class="stat-card"><div class="label">Active Trips Today</div><div class="value" id="s-trips">—</div></div>
+    <div class="stat-card"><div class="label">Confirmed Bookings</div><div class="value" id="s-bookings">—</div></div>
+    <div class="stat-card"><div class="label">Your Role</div>
+      <div class="value" style="font-size:1.2rem">
+        <span class="tag tag-{% if role=='admin' %}red{% else %}blue{% endif %}">{{ role | upper }}</span>
+      </div>
+      <div class="sub">{{ session.get('group','') if session }}</div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-4">
+    <div class="card">
+      <div class="card-title">🗺️ Today's Trips</div>
+      <div id="dashTrips"><div class="text-muted">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎫 Recent Bookings</div>
+      <div id="dashBookings"><div class="text-muted">Loading…</div></div>
+    </div>
+  </div>
+
+  {% if role == 'admin' %}
+  <div class="card">
+    <div class="card-title">⚡ Quick Actions (Admin)</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-success" onclick="window.location='/admin'">🔧 Admin Panel</button>
+      <button class="btn btn-primary" onclick="window.location='/benchmark'">⚡ Run Benchmark</button>
+      <button class="btn btn-outline" onclick="window.location='/logs'">📋 View Audit Logs</button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async () => {
+  const [trips, bookings, members] = await Promise.all([
+    apiFetch('/api/trips').catch(()=>[]),
+    apiFetch('/api/bookings').catch(()=>[]),
+    apiFetch('/api/members').catch(()=>[]),
+  ]);
+
+  document.getElementById('s-members').textContent  = members.length;
+  document.getElementById('s-bookings').textContent =
+    bookings.filter(b=>b.BookingStatus==='Confirmed').length;
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayTrips = trips.filter(t=>t.TripDate===today);
+  document.getElementById('s-trips').textContent = todayTrips.filter(t=>t.Status_==='InProgress').length;
+
+  // Trips table
+  const tt = todayTrips.slice(0,6);
+  if (tt.length === 0) {
+    document.getElementById('dashTrips').innerHTML = '<div class="text-muted">No trips today</div>';
+  } else {
+    document.getElementById('dashTrips').innerHTML = `
+      <table><thead><tr><th>Route</th><th>Departs</th><th>Status</th></tr></thead>
+      <tbody>${tt.map(t=>`<tr>
+        <td>${t.RouteName||t.Source+' → '+t.Destination}</td>
+        <td>${t.ScheduledDepartureTime}</td>
+        <td>${statusTag(t.Status_)}</td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+
+  // Bookings
+  const rb = bookings.slice(0,6);
+  if (rb.length === 0) {
+    document.getElementById('dashBookings').innerHTML = '<div class="text-muted">No bookings</div>';
+  } else {
+    document.getElementById('dashBookings').innerHTML = `
+      <table><thead><tr><th>Booking</th><th>Route</th><th>Status</th></tr></thead>
+      <tbody>${rb.map(b=>`<tr>
+        <td>#${b.BookingID}</td>
+        <td>${b.RouteName||'—'}</td>
+        <td>${bookingTag(b.BookingStatus)}</td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+})();
+
+function statusTag(s) {
+  const m = {InProgress:'blue',Scheduled:'yellow',Completed:'green',Cancelled:'red'};
+  return `<span class="tag tag-${m[s]||'gray'}">${s}</span>`;
+}
+function bookingTag(s) {
+  const m = {Confirmed:'green',Cancelled:'red',Completed:'blue',NoShow:'yellow'};
+  return `<span class="tag tag-${m[s]||'gray'}">${s}</span>`;
+}
+</script>
+{% endblock %}
