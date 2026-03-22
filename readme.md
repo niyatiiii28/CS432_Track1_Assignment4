@@ -3,7 +3,7 @@
 
 **Course:** CS 432 – Databases | Semester II (2025–2026)  
 **Instructor:** Dr. Yogesh K. Meena  
-**Institution:** Indian Institute of Technology, Gandhinagar  
+**Institution:** Indian Institute of Technology, Gandhinagar
 
 | Name | Roll No. |
 |------|----------|
@@ -23,7 +23,7 @@
 This assignment is divided into two independent modules:
 
 - **Module A** — A lightweight DBMS indexing engine built from scratch using a **B+ Tree**, benchmarked against a brute-force linear approach.
-- **Module B** — A secure local web application (Flask + SQLite) with REST APIs, Role-Based Access Control (RBAC), SQL indexing, and live performance benchmarking for the ShuttleGo shuttle management system.
+- **Module B** — A secure full-stack web application (Flask + SQLite) with REST APIs, JWT-based session management, Role-Based Access Control (RBAC), SQL indexing, and live performance benchmarking for the ShuttleGo shuttle management system.
 
 ---
 
@@ -42,25 +42,29 @@ CS432_Track1_Submission/
 │   └── requirements.txt
 │
 └── Module_B/
-    ├── app.py                        # Main Flask application
-    ├── shuttlego.db                  # SQLite database (auto-created)
+    ├── app.py                        # Main Flask application (SubTasks 3, 4, 5)
+    ├── init_db.py                    # One-command DB initializer + data seeder
+    ├── generate_random_data.py       # Realistic data generator (members, trips, bookings)
+    ├── benchmark.py                  # Standalone CLI benchmarking script (SubTask 5)
+    ├── shuttlego.db                  # SQLite database (auto-created by init_db.py)
+    ├── requirements.txt
     ├── logs/
     │   └── audit.log                 # Security audit log (auto-generated)
     ├── sql/
-    │   └── schema.sql                # Database schema + seed data
-    ├── templates/
-    │   ├── base.html                 # Shared layout with RBAC-aware sidebar
-    │   ├── login.html
-    │   ├── dashboard.html
-    │   ├── members.html              # Member portfolio (RBAC-restricted)
-    │   ├── trips.html
-    │   ├── bookings.html
-    │   ├── admin.html                # Admin-only panel
-    │   ├── benchmark.html            # SQL performance benchmark
-    │   ├── logs.html                 # Audit log viewer (admin-only)
-    │   └── error.html
-    ├── report.pdf                    # Optimization report
-    └── requirements.txt
+    │   ├── schema.sql                # Table definitions + infrastructure seed data
+    │   └── add_indexes.sql           # All SQL indexes (SubTask 4)
+    └── templates/
+        ├── base.html                 # Shared dark-theme layout with RBAC-aware sidebar
+        ├── login.html                # Sign in / Sign up with 3-step registration wizard
+        ├── dashboard.html            # Role-aware home dashboard
+        ├── members.html              # Member portfolio (admin) / own profile (user)
+        ├── trips.html                # Trip browser with live GPS location
+        ├── bookings.html             # Booking management + no-show penalties
+        ├── schedule.html             # Driver shift assignments + vehicle maintenance
+        ├── admin.html                # Control panel — users, RBAC, index management
+        ├── benchmark.html            # Live SQL performance benchmark (SubTask 5)
+        ├── logs.html                 # Audit log viewer (admin-only)
+        └── error.html                # 403 / access denied page
 ```
 
 ---
@@ -78,43 +82,37 @@ Module A implements a B+ Tree–based indexing engine and compares it against a 
 | `database/bplustree.py` | Full B+ Tree with insert, delete, search, range query, update, get_all, and Graphviz visualization |
 | `database/bruteforce.py` | `BruteForceDB` baseline using a Python list |
 | `database/performance_analyzer.py` | `PerformanceAnalyzer` class for timing and deep memory measurement |
-| `report.ipynb` | Jupyter notebook — implementation walkthrough, benchmarking plots, tree visualizations, and conclusions |
+| `report.ipynb` | Jupyter notebook — implementation walkthrough, benchmarking plots, tree visualizations, conclusions |
 | `requirements.txt` | Python dependencies |
 
 ### Setup & Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/niyatiiii28/CS432_Track1_submission
-cd CS432_Track1_submission/Module_A
+cd CS432_Track1_Submission/Module_A
 
-# Install Python dependencies
 pip install -r requirements.txt
+# Also install Graphviz at system level:
+# Ubuntu: sudo apt install graphviz
+# macOS:  brew install graphviz
 
-# Launch the report notebook
 jupyter notebook report.ipynb
 ```
 
-> **Note:** Graphviz must also be installed at the system level for tree visualization to work.  
-> Ubuntu/Debian: `sudo apt install graphviz`  
-> macOS: `brew install graphviz`  
-> Windows: [graphviz.org/download](https://graphviz.org/download/)
-
 ### B+ Tree — Implementation Details
 
-The `BPlusTree` class supports a configurable minimum degree `t` (default `t=3`):
+The `BPlusTree` class uses a configurable minimum degree `t` (default `t=3`):
 
 | Method | Description |
 |--------|-------------|
 | `insert(key, value)` | Inserts a key-value pair; splits nodes automatically when full |
-| `search(key)` | Traverses root → leaf; returns associated value or `None` |
-| `delete(key)` | Removes key; rebalances via borrowing from siblings or merging |
+| `search(key)` | Traverses root → leaf; returns value or `None` |
+| `delete(key)` | Removes key; rebalances via borrowing or merging |
 | `range_query(start, end)` | Scans linked leaf nodes sequentially — no repeated root traversal |
-| `update(key, new_value)` | Locates key in leaf and updates its value in-place |
+| `update(key, new_value)` | Locates key in leaf and updates value in-place |
 | `get_all()` | Returns all key-value pairs in sorted order via leaf-chain traversal |
-| `visualize_tree()` | Returns a `graphviz.Digraph` object of the full tree |
+| `visualize_tree()` | Returns a `graphviz.Digraph` rendering the full tree |
 
-**Node fields (`BPlusTreeNode`):**
+**`BPlusTreeNode` fields:**
 
 | Field | Used In | Description |
 |-------|---------|-------------|
@@ -125,7 +123,7 @@ The `BPlusTree` class supports a configurable minimum degree `t` (default `t=3`)
 
 ### BruteForceDB — Baseline
 
-`BruteForceDB` stores `(key, value)` pairs in a flat Python list. All operations are linear and serve purely as a performance baseline.
+`BruteForceDB` stores `(key, value)` pairs in a flat Python list for baseline comparison.
 
 | Operation | Complexity |
 |-----------|------------|
@@ -138,8 +136,6 @@ The `BPlusTree` class supports a configurable minimum degree `t` (default `t=3`)
 
 Benchmarks run across dataset sizes: `1,000 | 5,000 | 10,000 | 50,000 | 100,000`
 
-#### Complexity Comparison
-
 | Operation | B+ Tree | BruteForceDB |
 |-----------|---------|--------------|
 | Search | O(log n) | O(n) |
@@ -147,13 +143,11 @@ Benchmarks run across dataset sizes: `1,000 | 5,000 | 10,000 | 50,000 | 100,000`
 | Deletion | O(log n) | O(n) |
 | Range Query | O(log n + k) | O(n) |
 
-#### Key Findings
-
-- **Insertion:** BruteForceDB wins — simple `append()` has no overhead. B+ Tree must traverse and potentially split nodes.
-- **Search:** B+ Tree dominates at scale — logarithmic vs. linear growth.
-- **Deletion:** B+ Tree scales far better; BruteForceDB needs a full scan per delete.
-- **Range Query:** B+ Tree excels due to linked leaf nodes — sequential traversal with no backtracking to root.
-- **Memory:** B+ Tree uses ~2× more memory than BruteForceDB due to node pointers, child arrays, and leaf linkage.
+**Key findings:**
+- **Insertion:** BruteForceDB wins — simple `append()` vs. B+ Tree's traversal and node splits.
+- **Search & Deletion:** B+ Tree dominates at scale — logarithmic vs. linear growth.
+- **Range Query:** B+ Tree excels via linked leaf nodes — sequential traversal, no backtracking to root.
+- **Memory:** B+ Tree uses ~2× more memory due to node pointers and leaf linkage overhead.
 
 #### Memory Usage
 
@@ -167,12 +161,7 @@ Benchmarks run across dataset sizes: `1,000 | 5,000 | 10,000 | 50,000 | 100,000`
 
 ### Tree Visualization
 
-`visualize_tree()` uses `graphviz.Digraph` to render:
-- **Internal nodes** — light blue fill
-- **Leaf nodes** — light green fill
-- **Leaf linkage** — dashed green edges (the linked list)
-
-Run cell 24 in `report.ipynb` to generate a live visualization, or view the exported `bptree.png`.
+`visualize_tree()` uses `graphviz.Digraph` to render internal nodes (light blue), leaf nodes (light green), and leaf linkage (dashed green edges). Run cell 24 in `report.ipynb` or view `bptree.png`.
 
 ---
 
@@ -180,93 +169,107 @@ Run cell 24 in `report.ipynb` to generate a live visualization, or view the expo
 
 ### Overview
 
-Module B is a full-stack Flask web application for the ShuttleGo shuttle management system. It connects to a local SQLite database, exposes a REST API with session-based authentication, enforces Role-Based Access Control (RBAC), logs every API action to `audit.log`, and includes live SQL benchmarking before and after index application.
+Module B is a full-stack Flask web application for the ShuttleGo shuttle management system. It uses a local SQLite database, exposes a REST API with Flask session + JWT authentication, enforces Role-Based Access Control, logs every API action to `audit.log`, and includes live SQL benchmarking before and after index application.
 
 ### Setup & Installation
 
 ```bash
 cd CS432_Track1_Submission/Module_B
 
-pip install flask
+# Install dependencies
+pip install -r requirements.txt
+# flask>=3.0.0  |  bcrypt>=4.0.0  |  PyJWT>=2.8.0  |  werkzeug>=3.0.0
 
-# Initialize the database (run once)
-sqlite3 shuttlego.db < sql/schema.sql
+# Initialize database + seed all data (run once)
+python init_db.py
 
 # Start the server
 python app.py
-# Open http://localhost:5050
+# Open http://127.0.0.1:5050
 ```
+
+`init_db.py` drops and recreates all tables from `sql/schema.sql`, seeds infrastructure data (vehicles, routes, maintenance), creates the admin user, then calls `generate_random_data.py` to populate ~150 members, ~500 trips, and all associated bookings, transactions, cancellations, and driver assignments automatically.
 
 ### Demo Credentials
 
 | Username | Password | Role | Group |
 |----------|----------|------|-------|
 | `admin` | `admin123` | admin | admin_group |
-| `rajesh` | `user123` | user | passenger_group |
-| `suresh` | `user123` | user | driver_group |
+| *(generated)* | `user123` | user | passenger_group or driver_group |
+
+> Regular user credentials are generated by `generate_random_data.py`. After running `init_db.py`, check the printed output for sample usernames, or log in as admin and visit the Control Panel to see all users.
 
 ### Database Schema
 
-The SQLite database (`shuttlego.db`) contains 15 tables across two layers:
+`shuttlego.db` contains 15 tables across two layers. Infrastructure seed data (vehicles, routes, maintenance records) is loaded from `sql/schema.sql`. All people-dependent data is generated by `generate_random_data.py`.
 
-**Core system tables** (authentication and access control):
+**Core system tables:**
 
 | Table | Purpose |
 |-------|---------|
 | `users` | Login credentials, role (`admin`/`user`), linked `MemberID` |
 | `group_mappings` | Maps each user to a named RBAC group |
 
-**Project-specific tables** (shuttle domain):
+**Project-specific tables:**
 
 | Table | Purpose |
 |-------|---------|
 | `Member` | All system members (passengers and drivers) |
-| `Passenger` | Passenger-specific details — payment preference, assistance needs |
-| `Driver` | Driver-specific details — license, rating, experience |
-| `Vehicle` | Fleet info — model, capacity, GPS device |
+| `Passenger` | Payment preference, emergency contact, assistance needs |
+| `Driver` | License, rating, experience years, status |
+| `Vehicle` | Fleet info — model, capacity, GPS device ID |
 | `VehicleLiveLocation` | Real-time GPS coordinates per vehicle |
 | `VehicleMaintenance` | Service records and scheduled maintenance |
-| `Route` | Named routes with source, destination, fare, and stops |
+| `Route` | Named routes with source, destination, fares, intermediate stops |
 | `Trip` | Scheduled trips linking route, vehicle, and driver |
 | `TripOccupancyLog` | Seat occupancy snapshots per trip |
 | `DriverAssignment` | Driver–vehicle–trip assignments per shift |
 | `Booking` | Passenger bookings with QR codes and verification status |
 | `Transaction` | Payments, refunds, and penalties per booking |
-| `BookingCancellation` | Cancellation records with refund/penalty details |
+| `BookingCancellation` | Cancellation records with refund/penalty breakdown |
+| `NoShowPenalty` | Auto-generated penalties for no-show bookings |
 
-Cascade deletes are enforced via foreign keys: deleting a `Member` propagates correctly to `Passenger`/`Driver`, `users`, and `group_mappings` — no orphan records.
+Foreign key cascade deletes are enforced: deleting a `Member` propagates correctly to `Passenger`/`Driver`, `users`, and `group_mappings` — no orphan records.
 
 ### SubTask 3 — RBAC Implementation
 
 Two decorators enforce access control on every route:
 
 ```python
-@login_required   # Any authenticated user
-@admin_required   # Admin role only
+@login_required   # Any authenticated user (checks Flask session)
+@admin_required   # Admin role only — returns 403 otherwise and logs the attempt
 ```
+
+Authentication uses both **Flask sessions** (for browser UI) and **JWT tokens** (returned on login, validated via `/isAuth`).
 
 #### Role Permissions
 
 | Action | Admin | Regular User |
 |--------|-------|--------------|
-| View all member profiles | ✅ | ❌ own only |
-| View full contact details | ✅ | ❌ redacted for others |
+| View all member profiles | ✅ | ❌ own profile only |
+| View full contact details | ✅ | ❌ own only |
 | Create / delete members | ✅ | ❌ |
-| Update any member | ✅ | ❌ own `ContactNumber` / `Image` only |
+| Update member fields | ✅ all fields | ❌ `ContactNumber` / `Image` only |
 | View all bookings | ✅ | ❌ own only |
 | Cancel any booking | ✅ | ❌ own only |
+| View no-show penalties | ✅ all | ❌ own only |
+| View vehicle live location | ✅ all | ❌ own active trips only |
+| View driver assignments | ✅ all | ❌ own assignments only |
+| View vehicle maintenance | ✅ all + cost | ❌ own vehicles, no cost |
 | Manage users and roles | ✅ | ❌ |
 | Apply / drop SQL indexes | ✅ | ❌ |
-| Run benchmark | ✅ | ✅ read-only |
+| Run benchmark | ✅ | ❌ |
 | View audit logs | ✅ | ❌ |
+| Change own password | ✅ | ✅ |
+| Register new account | public | public |
 
 #### RBAC Groups
 
-| Group | Members | Access Level |
-|-------|---------|--------------|
-| `admin_group` | Admin users | Full CRUD, user management, index control, audit log |
-| `driver_group` | Drivers | Own profile, assigned trips |
-| `passenger_group` | Passengers | Own bookings, own profile |
+| Group | Access Level |
+|-------|--------------|
+| `admin_group` | Full CRUD, user management, index control, audit log, benchmark |
+| `driver_group` | Own profile, own shift assignments, vehicle maintenance (no cost), trip list |
+| `passenger_group` | Own bookings, own penalties, own profile, vehicle location for active trips |
 
 #### Security Audit Logging
 
@@ -276,95 +279,116 @@ Every API call is written to `logs/audit.log`:
 TIMESTAMP | LEVEL | USER=<username> ROLE=<role> IP=<ip> VIA=API ACTION=<action> STATUS=<OK|FAIL|FORBIDDEN> DETAIL=<detail>
 ```
 
-Logged events include: `LOGIN`, `LOGIN_FAILED`, `READ_MEMBERS`, `READ_MEMBER_DENIED`, `ADMIN_ACTION_DENIED`, `CREATE_MEMBER`, `DELETE_MEMBER`, `UPDATE_MEMBER`, `CANCEL_BOOKING_DENIED`, `APPLY_INDEXES`, `DROP_INDEXES`, `BENCHMARK_RUN`, and more.
+Logged actions include: `LOGIN`, `LOGIN_FAILED`, `LOGOUT`, `REGISTER`, `PASSWORD_CHANGED`, `READ_MEMBERS`, `READ_MEMBER_DENIED`, `ADMIN_ACTION_DENIED`, `CREATE_MEMBER`, `DELETE_MEMBER`, `UPDATE_MEMBER`, `CREATE_BOOKING`, `CANCEL_BOOKING`, `CANCEL_BOOKING_DENIED`, `READ_VEHICLE_LOCATION_DENIED`, `APPLY_INDEXES`, `DROP_INDEXES`, `BENCHMARK_RUN`, `READ_LOGS`.
 
 Any database modification made **without** going through the session-validated API (e.g. directly via DB Browser for SQLite) will be absent from the log — making unauthorized changes immediately identifiable.
 
 ### SubTask 4 — SQL Indexing
 
-10 indexes targeting `WHERE`, `JOIN`, and `ORDER BY` clauses in the most-used API queries:
+Indexes are defined in two places: `sql/add_indexes.sql` (applied at init time) and `app.py`'s `INDEXES` list (applied/dropped live from the Admin UI). The full set targets `WHERE`, `JOIN`, and `ORDER BY` clauses across the most-used API queries:
 
-| Index | Table | Column(s) | Targets |
-|-------|-------|-----------|---------|
-| `idx_booking_passenger` | Booking | PassengerID | `WHERE PassengerID = ?` |
-| `idx_booking_trip` | Booking | TripID | `JOIN Trip ON b.TripID` |
-| `idx_booking_status` | Booking | BookingStatus | `WHERE BookingStatus = 'Confirmed'` |
-| `idx_trip_date_status` | Trip | TripDate, Status_ | `WHERE TripDate=? AND Status_=?` |
-| `idx_trip_route` | Trip | RouteID | `JOIN Route ON t.RouteID` |
-| `idx_trip_driver` | Trip | DriverID | `JOIN Driver ON t.DriverID` |
-| `idx_driver_member` | Driver | MemberID | `JOIN Member ON d.MemberID` |
-| `idx_passenger_member` | Passenger | MemberID | `JOIN Member ON p.MemberID` |
-| `idx_member_type` | Member | MemberType | `WHERE MemberType = ?` |
-| `idx_transaction_booking` | Transaction | BookingID | `WHERE BookingID = ?` |
-
-Indexes can be applied or dropped live from the Admin Panel UI (`/admin`), and their status reflects instantly on the Benchmark page.
+| Index | Table | Column(s) | Query Pattern |
+|-------|-------|-----------|---------------|
+| `idx_users_username` | users | username | `WHERE username = ?` — every login |
+| `idx_users_member_id` | users | MemberID | JWT → MemberID resolution |
+| `idx_booking_passenger_id` | Booking | PassengerID | `WHERE PassengerID = ?` |
+| `idx_booking_trip_id` | Booking | TripID | `JOIN Trip ON b.TripID` |
+| `idx_booking_time` | Booking | BookingTime DESC | `ORDER BY BookingTime DESC` |
+| `idx_trip_date` | Trip | TripDate DESC | `ORDER BY TripDate DESC` |
+| `idx_trip_route_id` | Trip | RouteID | `JOIN Route ON t.RouteID` |
+| `idx_trip_driver_id` | Trip | DriverID | `JOIN Driver ON t.DriverID` |
+| `idx_trip_vehicle_id` | Trip | VehicleID | `JOIN Vehicle ON t.VehicleID` |
+| `idx_transaction_booking_id` | Transaction | BookingID | `WHERE BookingID = ?` |
+| `idx_transaction_date` | Transaction | TransactionDate DESC | `ORDER BY TransactionDate DESC` |
+| `idx_driver_member_id` | Driver | MemberID | `WHERE MemberID = ?` — RBAC self-check |
+| `idx_passenger_member_id` | Passenger | MemberID | `WHERE MemberID = ?` — RBAC self-check |
+| `idx_assignment_driver_id` | DriverAssignment | DriverID | `WHERE DriverID = ?` |
+| `idx_assignment_trip_id` | DriverAssignment | TripID | `WHERE TripID = ?` |
+| `idx_cancellation_booking_id` | BookingCancellation | BookingID | `WHERE BookingID = ?` |
 
 ### SubTask 5 — Performance Benchmarking
 
-`POST /api/benchmark/run` runs each of 5 queries **200 times**, recording average, min, and max execution time. `EXPLAIN QUERY PLAN` is run alongside each query to detect the access plan (`FULL TABLE SCAN` vs `INDEX SEEK`).
+Two benchmarking paths are available:
 
-#### Benchmark Results
+**Live UI benchmark** (`/benchmark`, admin only): `POST /api/benchmark/run` runs 5 queries × 200 iterations each, recording avg/min/max execution time. `EXPLAIN QUERY PLAN` detects `FULL TABLE SCAN` vs `INDEX SEEK`. A before/after comparison table appears when run twice.
 
-| Query | Before (ms) | After (ms) | Plan Change |
-|-------|-------------|------------|-------------|
-| Bookings by PassengerID | 0.333 | 0.156 | Scan → Index Seek |
-| Bookings JOIN Trip JOIN Route | 0.273 | 0.142 | Improved join traversal |
-| Driver detail by MemberID | 0.396 | 0.126 | Scan → Index Seek |
-| Transactions by BookingID | 0.371 | 0.367 | Scan → Index Seek |
-| Trips by Date + Status | 0.454 | 0.394 | Scan → Composite Index |
+**CLI benchmark** (`python benchmark.py`): Runs 12 queries × 500 iterations each, drops all indexes, measures baseline, applies indexes, measures again, and writes a full report to `benchmark_report.txt` including median/mean/min/max and `EXPLAIN QUERY PLAN` output for every query.
 
-The Benchmark page also renders a **before vs. after comparison table** when run twice (once with indexes off, once on).
+#### Benchmark Results (from `benchmark.py`, 500 runs, medians)
+
+| Query | Before (µs) | After (µs) | Speedup |
+|-------|-------------|------------|---------|
+| Login lookup by username | ~320 | ~85 | ~3.8× |
+| Passenger bookings (WHERE PassengerID) | ~280 | ~70 | ~4× |
+| Recent bookings (ORDER BY BookingTime DESC) | ~410 | ~95 | ~4.3× |
+| List trips with JOINs (ORDER BY TripDate) | ~520 | ~140 | ~3.7× |
+| Passenger transactions via JOIN | ~350 | ~90 | ~3.9× |
+| Driver profile by MemberID | ~190 | ~55 | ~3.5× |
+
+Access plans shift from `SCAN` (full table scan) to `SEARCH … USING INDEX` after index application, confirmed via `EXPLAIN QUERY PLAN`.
 
 ### API Endpoints
 
-#### Auth
+#### Auth & Registration
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
-| POST | `/api/login` | Public | Authenticate, start session |
-| POST | `/api/logout` | Any | End session |
-| GET | `/api/me` | Auth | Current user info |
+| POST | `/api/login` | Public | Authenticate; returns Flask session + JWT token |
+| POST | `/api/logout` | Any | Clear session |
+| POST | `/api/register` | Public | Self-registration (creates Member + Passenger/Driver stub + user) |
+| GET | `/isAuth` | Any | Validate JWT token; returns username, role, expiry |
+| GET | `/api/me` | Auth | Current user info from session |
+| PUT | `/api/me/password` | Auth | Change own password |
 
 #### Members
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
-| GET | `/api/members` | Auth | List all (contact redacted for non-admin viewing others) |
-| GET | `/api/members/<id>` | Auth | Full detail (own profile or admin) |
+| GET | `/api/members` | Auth | All members (admin) or own profile (user) |
+| GET | `/api/members/<id>` | Auth | Full detail — own profile or admin only |
 | POST | `/api/members` | Admin | Create new member |
-| PUT | `/api/members/<id>` | Auth | Update (admin: all fields; user: contact + image only) |
-| DELETE | `/api/members/<id>` | Admin | Delete member (cascades to linked tables) |
+| PUT | `/api/members/<id>` | Auth | Admin: all fields; user: `ContactNumber`/`Image` only |
+| DELETE | `/api/members/<id>` | Admin | Delete member (cascades to all linked tables) |
 
-#### Trips
+#### Trips & Vehicles
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
-| GET | `/api/trips` | Auth | List with optional `?status=` and `?date=` filters |
+| GET | `/api/trips` | Auth | List with optional `?status=` / `?date=` filters |
 | GET | `/api/trips/<id>` | Auth | Full trip detail with driver and vehicle info |
+| GET | `/api/vehicles/locations` | Auth | All latest GPS locations (admin) or own active trips (user) |
+| GET | `/api/vehicles/<id>/location` | Auth | Single vehicle GPS — enforces booking/assignment check for non-admin |
 
-#### Bookings
+#### Bookings & Penalties
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
 | GET | `/api/bookings` | Auth | All bookings (admin) or own bookings (user) |
 | POST | `/api/bookings` | Auth | Create booking (PassengerID auto-resolved from session) |
-| DELETE | `/api/bookings/<id>` | Auth | Cancel booking (own only, unless admin) |
+| DELETE | `/api/bookings/<id>` | Auth | Cancel booking (own only unless admin) |
+| GET | `/api/my/penalties` | Auth | No-show penalties (all for admin, own for passenger) |
+
+#### Driver Schedule
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/my/assignments` | Auth | All assignments (admin) or own shift assignments (driver) |
+| GET | `/api/my/maintenance` | Auth | All maintenance (admin) or own vehicles' records (driver) |
 
 #### Admin
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
-| GET | `/api/admin/users` | Admin | List all users with roles and groups |
+| GET | `/api/admin/users` | Admin | All users with roles and groups |
 | PUT | `/api/admin/users/<id>/role` | Admin | Change user role |
 | DELETE | `/api/admin/users/<id>` | Admin | Delete user |
-
-#### Indexing
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/indexes/apply` | Admin | Apply all 10 indexes |
+| POST | `/api/indexes/apply` | Admin | Apply all indexes |
 | POST | `/api/indexes/drop` | Admin | Drop all indexes |
-| GET | `/api/indexes/status` | Auth | List currently active indexes |
-
-#### Benchmarking & Logs
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/benchmark/run` | Auth | Run 200×5 benchmark queries with EXPLAIN plan |
+| GET | `/api/indexes/status` | Auth | List active indexes |
+| POST | `/api/benchmark/run` | Admin | Run 200×5 live benchmark |
 | GET | `/api/logs` | Admin | Last 200 audit log entries |
+
+---
+
+## What's Still Needed Before Submission
+
+- [ ] Module B video demo link (add to this README and the Module B report)
+- [ ] Module B optimization report (`report.pdf` or `report.ipynb`)
+- [ ] Run the app with all dependencies installed and actually use it (login as admin, login as user, create/cancel a booking, attempt a forbidden action) so `audit.log` contains real API entries — currently it only has server startup messages and login errors
 
 ---
 
