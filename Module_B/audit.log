@@ -1,0 +1,21 @@
+2026-03-19 22:46:51 | INFO | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5050
+2026-03-19 22:46:51 | INFO | [33mPress CTRL+C to quit[0m
+2026-03-19 22:46:51 | INFO |  * Restarting with stat
+2026-03-19 22:46:51 | WARNING |  * Debugger is active!
+2026-03-19 22:46:51 | INFO |  * Debugger PIN: 143-795-328
+2026-03-19 22:47:53 | INFO | 127.0.0.1 - - [19/Mar/2026 22:47:53] "[32mGET / HTTP/1.1[0m" 302 -
+2026-03-19 22:47:53 | INFO | 127.0.0.1 - - [19/Mar/2026 22:47:53] "GET /login HTTP/1.1" 200 -
+2026-03-19 22:47:53 | INFO | 127.0.0.1 - - [19/Mar/2026 22:47:53] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-03-19 22:48:09 | INFO | 127.0.0.1 - - [19/Mar/2026 22:48:09] "[35m[1mPOST /api/login HTTP/1.1[0m" 500 -
+2026-03-19 22:48:17 | INFO | 127.0.0.1 - - [19/Mar/2026 22:48:17] "[35m[1mPOST /api/login HTTP/1.1[0m" 500 -
+2026-03-19 22:51:08 | INFO | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5050
+2026-03-19 22:51:08 | INFO | [33mPress CTRL+C to quit[0m
+2026-03-19 22:51:08 | INFO |  * Restarting with stat
+2026-03-19 22:51:08 | WARNING |  * Debugger is active!
+2026-03-19 22:51:08 | INFO |  * Debugger PIN: 143-795-328
+2026-03-19 22:51:24 | INFO | 127.0.0.1 - - [19/Mar/2026 22:51:24] "[32mGET / HTTP/1.1[0m" 302 -
+2026-03-19 22:51:24 | INFO | 127.0.0.1 - - [19/Mar/2026 22:51:24] "GET /login HTTP/1.1" 200 -
+2026-03-19 22:51:34 | INFO | 127.0.0.1 - - [19/Mar/2026 22:51:34] "[35m[1mPOST /api/login HTTP/1.1[0m" 500 -
+2026-03-19 22:51:36 | INFO | 127.0.0.1 - - [19/Mar/2026 22:51:36] "[35m[1mPOST /api/login HTTP/1.1[0m" 500 -
