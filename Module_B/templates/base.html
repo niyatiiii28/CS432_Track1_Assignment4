@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}ShuttleGo{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#1a1a1a;--bg2:#222222;--bg3:#2a2a2a;--card:#252525;--border:#333333;
+      --orange:#ff6b2b;--orange-dim:#cc5522;--orange-glow:rgba(255,107,43,.15);
+      --cream:#f5f0e8;--cream-dim:#c8c0b0;--text:#e8e3da;--muted:#888880;
+      --success:#4caf7d;--danger:#e05252;--warn:#e0a030;--info:#4a9eda;
+      --sidebar-w:240px;--radius:8px;
+      --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
+    .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+    .sidebar-logo .wordmark{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--cream);letter-spacing:-.5px}
+    .sidebar-logo .wordmark span{color:var(--orange)}
+    .sidebar-logo .tagline{font-size:.68rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:1.5px}
+    .sidebar-user{padding:16px 20px;border-bottom:1px solid var(--border)}
+    .sidebar-user .uname{font-size:.9rem;font-weight:600;color:var(--cream)}
+    .sidebar-user .urole{display:inline-block;margin-top:5px;padding:2px 10px;border-radius:20px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-family:var(--mono)}
+    .urole-admin{background:var(--orange);color:#fff}
+    .urole-user{background:var(--bg3);color:var(--cream-dim);border:1px solid var(--border)}
+    .sidebar nav{flex:1;padding:12px 0;overflow-y:auto}
+    .nav-section{padding:8px 20px 4px;font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-family:var(--mono)}
+    .sidebar nav a{display:flex;align-items:center;gap:12px;padding:10px 20px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:400;transition:all .15s;border-left:2px solid transparent}
+    .sidebar nav a:hover{color:var(--cream);background:var(--bg3);border-left-color:var(--border)}
+    .sidebar nav a.active{color:var(--orange);background:var(--orange-glow);border-left-color:var(--orange);font-weight:500}
+    .sidebar nav a .icon{font-size:1rem;width:18px;text-align:center}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+    .btn-logout{width:100%;padding:9px 14px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:.8rem;font-family:var(--mono);transition:all .15s;text-align:left}
+    .btn-logout:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+    .main{margin-left:var(--sidebar-w);min-height:100vh}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+    .topbar h1{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--cream);letter-spacing:-.3px}
+    .content{padding:28px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+    .card-title{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:.855rem}
+    th{padding:10px 14px;text-align:left;font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg2)}
+    td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
+    tr:last-child td{border-bottom:none}
+    tbody tr:hover td{background:var(--bg3)}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);cursor:pointer;font-size:.82rem;font-weight:500;border:none;transition:all .15s;font-family:var(--sans);text-decoration:none}
+    .btn-primary{background:var(--orange);color:#fff}.btn-primary:hover{background:var(--orange-dim)}
+    .btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{filter:brightness(.85)}
+    .btn-success{background:var(--success);color:#fff}.btn-success:hover{filter:brightness(.85)}
+    .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{background:var(--bg3);border-color:var(--muted)}
+    .btn-sm{padding:5px 10px;font-size:.75rem}
+    .btn-ghost{background:transparent;border:none;color:var(--muted);padding:5px 8px}.btn-ghost:hover{color:var(--orange)}
+    .tag{display:inline-block;padding:2px 9px;border-radius:4px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
+    .tag-orange{background:var(--orange-glow);color:var(--orange);border:1px solid rgba(255,107,43,.3)}
+    .tag-green{background:rgba(76,175,125,.12);color:var(--success);border:1px solid rgba(76,175,125,.25)}
+    .tag-red{background:rgba(224,82,82,.12);color:var(--danger);border:1px solid rgba(224,82,82,.25)}
+    .tag-blue{background:rgba(74,158,218,.12);color:var(--info);border:1px solid rgba(74,158,218,.25)}
+    .tag-yellow{background:rgba(224,160,48,.12);color:var(--warn);border:1px solid rgba(224,160,48,.25)}
+    .tag-gray{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--orange);opacity:.5}
+    .stat-card .s-label{font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+    .stat-card .s-value{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--cream);line-height:1}
+    .stat-card .s-sub{font-size:.75rem;color:var(--muted);margin-top:6px}
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-size:.75rem;font-weight:600;color:var(--cream-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
+    .form-control{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:.875rem;font-family:var(--sans);outline:none;transition:border-color .15s}
+    .form-control:focus{border-color:var(--orange)}
+    .form-control option{background:var(--bg3)}
+    select.form-control{cursor:pointer}
+    .alert{padding:12px 16px;border-radius:var(--radius);font-size:.84rem;margin-bottom:16px}
+    .alert-error{background:rgba(224,82,82,.1);color:#f87171;border:1px solid rgba(224,82,82,.25)}
+    .alert-success{background:rgba(76,175,125,.1);color:#6ee7b7;border:1px solid rgba(76,175,125,.25)}
+    .alert-info{background:rgba(74,158,218,.1);color:#93c5fd;border:1px solid rgba(74,158,218,.25)}
+    .alert-warn{background:rgba(224,160,48,.1);color:var(--warn);border:1px solid rgba(224,160,48,.25)}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px;width:min(520px,92vw);max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+    .modal-title{font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--cream);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .modal-footer{margin-top:22px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+    #toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+    .toast{padding:12px 18px;border-radius:var(--radius);font-size:.82rem;color:#fff;min-width:220px;animation:slideUp .2s ease;box-shadow:0 8px 24px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);font-family:var(--mono)}
+    .toast-success{background:#1a3a2a;color:var(--success);border-color:rgba(76,175,125,.3)}
+    .toast-error{background:#3a1a1a;color:var(--danger);border-color:rgba(224,82,82,.3)}
+    .toast-info{background:#1a2a3a;color:var(--info);border-color:rgba(74,158,218,.3)}
+    @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .flex{display:flex}.flex-between{display:flex;justify-content:space-between;align-items:center}
+    .flex-center{display:flex;align-items:center;justify-content:center}
+    .gap-2{gap:8px}.gap-3{gap:12px}
+    .mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}.mb-4{margin-bottom:16px}.mb-6{margin-bottom:24px}.mt-4{margin-top:16px}
+    .text-muted{color:var(--muted);font-size:.82rem}.text-cream{color:var(--cream)}.text-orange{color:var(--orange)}
+    .mono{font-family:var(--mono)}
+    pre{background:var(--bg2);color:var(--cream-dim);padding:14px;border-radius:var(--radius);font-family:var(--mono);font-size:.75rem;overflow-x:auto;white-space:pre-wrap;border:1px solid var(--border)}
+    hr.sep{border:none;border-top:1px solid var(--border);margin:20px 0}
+    .empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+    .empty-state .empty-icon{font-size:2.5rem;margin-bottom:12px}
+    .empty-state p{font-size:.875rem}
+
+    /* GPS coordinate display */
+    .gps-badge {
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:20px;
+      background:rgba(74,158,218,.1);color:var(--info);
+      border:1px solid rgba(74,158,218,.2);
+      font-family:var(--mono);font-size:.72rem;
+    }
+    .gps-badge .dot {
+      width:7px;height:7px;border-radius:50%;
+      background:var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100%{opacity:1}50%{opacity:.3}
+    }
+  </style>
+</head>
+<body>
+
+{% if session.get('user_id') %}
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="wordmark">🚌 Shuttle<span>Go</span></div>
+    <div class="tagline">Management System</div>
+  </div>
+  <div class="sidebar-user">
+    <div class="uname">{{ username }}</div>
+    <span class="urole urole-{{ role }}">{{ role }}</span>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <a href="/dashboard" class="{% if request.path=='/dashboard' %}active{% endif %}">
+      <span class="icon">⬡</span> Dashboard
+    </a>
+    <a href="/members" class="{% if request.path=='/members' %}active{% endif %}">
+      <span class="icon">◈</span> {% if role == 'admin' %}Members{% else %}My Profile{% endif %}
+    </a>
+    <a href="/trips" class="{% if request.path=='/trips' %}active{% endif %}">
+      <span class="icon">◎</span> Trips
+    </a>
+    <a href="/bookings" class="{% if request.path=='/bookings' %}active{% endif %}">
+      <span class="icon">◷</span> Bookings
+    </a>
+
+    {# Schedule link: drivers see their shift schedule; admins see all assignments #}
+    {% if role == 'admin' or group == 'driver_group' %}
+    <a href="/schedule" class="{% if request.path=='/schedule' %}active{% endif %}">
+      <span class="icon">📋</span> {% if role == 'admin' %}Assignments{% else %}My Schedule{% endif %}
+    </a>
+    {% endif %}
+
+    {% if role == 'admin' %}
+    <div class="nav-section">Admin</div>
+    <a href="/admin" class="{% if request.path=='/admin' %}active{% endif %}">
+      <span class="icon">⚙</span> Control Panel
+    </a>
+    <a href="/benchmark" class="{% if request.path=='/benchmark' %}active{% endif %}">
+      <span class="icon">⚡</span> Benchmark
+    </a>
+    <a href="/logs" class="{% if request.path=='/logs' %}active{% endif %}">
+      <span class="icon">▤</span> Audit Logs
+    </a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="logout()">← Sign Out</button>
+  </div>
+</aside>
+{% endif %}
+
+<main class="main" {% if not session.get('user_id') %}style="margin-left:0"{% endif %}>
+  {% block content %}{% endblock %}
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+async function apiFetch(url, opts={}) {
+  const res = await fetch(url, {headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts});
+  const data = await res.json().catch(()=>({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+async function logout() {
+  await fetch('/api/logout', {method:'POST'});
+  window.location.href = '/login';
+}
+document.querySelectorAll('.modal-overlay').forEach(o =>
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
