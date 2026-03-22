@@ -4,3 +4,5 @@ psutil
 graphviz
 jupyter
 pandas
+flask
+werkzeug
