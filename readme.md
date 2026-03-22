@@ -1,4 +1,49 @@
-CS 432 – Databases | Track 1 | Assignment 2
+# CS 432 – Databases | Track 1 | Assignment 2
+## ShuttleGo – Shuttle Management and Booking System
+
+**Course:** CS 432 – Databases | Semester II (2025–2026)  
+**Instructor:** Dr. Yogesh K. Meena  
+**Institution:** Indian Institute of Technology, Gandhinagar  
+
+### Team Members:
+| Name | Roll No. |
+| :--- | :--- |
+| Niyati Siju | 23110312 |
+| K R Tanvi | 23110149 |
+| Makkena Lakshmi Manasa | 23110193 |
+| Aeshaa Nehal Shah | 23110018 |
+| Suhani | 24110358 |
+
+**Video Demo (Module A):** [Watch here](#) *(Insert your actual link here)*
+
+---
+
+## Project Overview
+This assignment is divided into two independent modules:
+* **Module A** — A lightweight DBMS indexing engine built from scratch using a B+ Tree, benchmarked against a brute-force linear approach.
+* **Module B** — A secure local web application with REST APIs, Role-Based Access Control (RBAC), and SQL query optimization for the ShuttleGo system.
+
+---
+
+## Repository Structure
+```text
+CS432_Track1_Submission/
+│
+├── Module_A/
+│   ├── database/
+│   │   ├── __init__.py
+│   │   ├── bplustree.py             # B+ Tree implementation
+│   │   ├── bruteforce.py            # BruteForceDB baseline
+│   │   └── performance_analyzer.py  # Benchmarking utilities
+│   ├── report.ipynb                 # Full report with benchmarks & visualizations
+│   └── requirements.txt
+│
+└── Module_B/
+    ├── app/                         # API code, UI templates, auth logic
+    ├── sql/                         # Database creation scripts
+    ├── logs/                        # audit.log
+    ├── report.pdf                   # Optimization report
+    └── requirements.txtCS 432 – Databases | Track 1 | Assignment 2
 
 ShuttleGo – Shuttle Management and Booking System
 
