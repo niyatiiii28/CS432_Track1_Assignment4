@@ -382,4 +382,3 @@ Access plans shift from `SCAN` (full table scan) to `SEARCH … USING INDEX` aft
 | POST | `/api/benchmark/run` | Admin | Run 200×5 live benchmark |
 | GET | `/api/logs` | Admin | Last 200 audit log entries |
 
----
