@@ -35,9 +35,9 @@ python app.py
 | Username | Password  | Role  | Group            |
 |----------|-----------|-------|------------------|
 | admin    | admin123  | admin | admin_group      |
-| rajesh   | user123   | user  | passenger_group  |
-| suresh   | user123   | user  | driver_group     |
-
+| rajesh_1 | user123   | user  | passenger_group  |
+| suresh_3 | user123   | user  | driver_group     |       
+user names are generated new everytime, so first register as admin > go to contol panel tab > check the list of all members > pick one as user login.
 ---
 
 ## SubTask 3 – RBAC Implementation
