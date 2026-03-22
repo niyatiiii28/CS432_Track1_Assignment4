@@ -14,8 +14,9 @@
 | Aeshaa Nehal Shah | 23110018 |
 | Suhani | 24110358 |
 
-**Video Demo (Module A):** [Watch here](#) *(Insert your actual link here)*
+**Video Demo (Module A):** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg) 
 
+**Video Demo (Module B):** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg) 
 ---
 
 ## Project Overview
