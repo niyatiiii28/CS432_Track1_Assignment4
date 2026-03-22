@@ -5,235 +5,372 @@
 **Instructor:** Dr. Yogesh K. Meena  
 **Institution:** Indian Institute of Technology, Gandhinagar  
 
-### Team Members:
 | Name | Roll No. |
-| :--- | :--- |
+|------|----------|
 | Niyati Siju | 23110312 |
 | K R Tanvi | 23110149 |
 | Makkena Lakshmi Manasa | 23110193 |
 | Aeshaa Nehal Shah | 23110018 |
 | Suhani | 24110358 |
 
-**Video Demo (Module A):** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg)       
-**Video Demo (Module B):** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg) 
-
+**Module A Video Demo:** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg)  
+**Module B Video Demo:** *(link to be added)*  
+**GitHub Repository:** [CS432_Track1_submission](https://github.com/niyatiiii28/CS432_Track1_submission) *(private)*
 
 ---
 
 ## Project Overview
+
 This assignment is divided into two independent modules:
-* **Module A** — A lightweight DBMS indexing engine built from scratch using a B+ Tree, benchmarked against a brute-force linear approach.
-* **Module B** — A secure local web application with REST APIs, Role-Based Access Control (RBAC), and SQL query optimization for the ShuttleGo system.
+
+- **Module A** — A lightweight DBMS indexing engine built from scratch using a **B+ Tree**, benchmarked against a brute-force linear approach.
+- **Module B** — A secure local web application (Flask + SQLite) with REST APIs, Role-Based Access Control (RBAC), SQL indexing, and live performance benchmarking for the ShuttleGo shuttle management system.
 
 ---
 
 ## Repository Structure
-```text
+
+```
 CS432_Track1_Submission/
 │
 ├── Module_A/
 │   ├── database/
 │   │   ├── __init__.py
-│   │   ├── bplustree.py             # B+ Tree implementation
-│   │   ├── bruteforce.py            # BruteForceDB baseline
-│   │   └── performance_analyzer.py  # Benchmarking utilities
-│   ├── report.ipynb                 # Full report with benchmarks & visualizations
+│   │   ├── bplustree.py              # B+ Tree implementation
+│   │   ├── bruteforce.py             # BruteForceDB baseline
+│   │   └── performance_analyzer.py   # Benchmarking utilities
+│   ├── report.ipynb                  # Full report with benchmarks & visualizations
 │   └── requirements.txt
 │
 └── Module_B/
-    ├── app/                         # API code, UI templates, auth logic
-    ├── sql/                         # Database creation scripts
-    ├── logs/                        # audit.log
-    ├── report.pdf                   # Optimization report
-    └── requirements.txtCS 432 – Databases | Track 1 | Assignment 2
-
-ShuttleGo – Shuttle Management and Booking System
-
-Course: CS 432 – Databases | Semester II (2025–2026)
-
-Instructor: Dr. Yogesh K. Meena
-
-Institution: Indian Institute of Technology, Gandhinagar
-
-Team Members:
-
-NameRoll No.Niyati Siju23110312K R Tanvi23110149Makkena Lakshmi Manasa23110193Aeshaa Nehal Shah23110018Suhani24110358Video Demo (Module A): Watch here
-
-Project Overview
-
-This assignment is divided into two independent modules:
-
-
-Module A — A lightweight DBMS indexing engine built from scratch using a B+ Tree, benchmarked against a brute-force linear approach.
-
-Module B — A secure local web application with REST APIs, Role-Based Access Control (RBAC), and SQL query optimization for the ShuttleGo system.
-
-Repository Structure
-
-CS432_Track1_Submission/
-
-│
-
-├── Module_A/
-
-│   ├── database/
-
-│   │   ├── __init__.py
-
-│   │   ├── bplustree.py          # B+ Tree implementation
-
-│   │   ├── bruteforce.py         # BruteForceDB baseline
-
-│   │   └── performance_analyzer.py  # Benchmarking utilities
-
-│   ├── report.ipynb              # Full report with benchmarks & visualizations
-
-│   └── requirements.txt
-
-│
-
-└── Module_B/
-
-    ├── app/                      # API code, UI templates, auth logic
-
-    ├── sql/                      # Database creation scripts
-
-    ├── logs/                     # audit.log
-
-    ├── report.pdf                # Optimization report
-
+    ├── app.py                        # Main Flask application
+    ├── shuttlego.db                  # SQLite database (auto-created)
+    ├── logs/
+    │   └── audit.log                 # Security audit log (auto-generated)
+    ├── sql/
+    │   └── schema.sql                # Database schema + seed data
+    ├── templates/
+    │   ├── base.html                 # Shared layout with RBAC-aware sidebar
+    │   ├── login.html
+    │   ├── dashboard.html
+    │   ├── members.html              # Member portfolio (RBAC-restricted)
+    │   ├── trips.html
+    │   ├── bookings.html
+    │   ├── admin.html                # Admin-only panel
+    │   ├── benchmark.html            # SQL performance benchmark
+    │   ├── logs.html                 # Audit log viewer (admin-only)
+    │   └── error.html
+    ├── report.pdf                    # Optimization report
     └── requirements.txt
+```
 
-Module A – Lightweight DBMS with B+ Tree Index
+---
 
-Overview
+## Module A – Lightweight DBMS with B+ Tree Index
 
-Module A implements a B+ Tree-based indexing engine and compares it against a BruteForceDB (linear list) approach. Performance is measured across insertion, search, deletion, range queries, and memory usage for dataset sizes from 1,000 to 100,000 elements.
+### Overview
 
+Module A implements a B+ Tree–based indexing engine and compares it against a `BruteForceDB` (plain Python list) approach. Performance is measured across insertion, search, deletion, range queries, and memory usage for dataset sizes from 1,000 to 100,000 elements.
 
-File Descriptions
+### File Descriptions
 
-FileDescriptiondatabase/bplustree.pyFull B+ Tree implementation with insert, delete, search, range query, update, and Graphviz visualizationdatabase/bruteforce.pyBaseline BruteForceDB using a Python list for comparisondatabase/performance_analyzer.pyPerformanceAnalyzer class for timing and deep memory measurementreport.ipynbJupyter notebook with implementation walkthrough, benchmarking plots, tree visualizations, and conclusionsrequirements.txtPython dependenciesSetup & Installation
+| File | Description |
+|------|-------------|
+| `database/bplustree.py` | Full B+ Tree with insert, delete, search, range query, update, get_all, and Graphviz visualization |
+| `database/bruteforce.py` | `BruteForceDB` baseline using a Python list |
+| `database/performance_analyzer.py` | `PerformanceAnalyzer` class for timing and deep memory measurement |
+| `report.ipynb` | Jupyter notebook — implementation walkthrough, benchmarking plots, tree visualizations, and conclusions |
+| `requirements.txt` | Python dependencies |
 
+### Setup & Installation
+
+```bash
 # Clone the repository
-
 git clone https://github.com/niyatiiii28/CS432_Track1_submission
-
 cd CS432_Track1_submission/Module_A
 
-
-# Install dependencies
-
+# Install Python dependencies
 pip install -r requirements.txt
 
-
-# Launch the notebook
-
+# Launch the report notebook
 jupyter notebook report.ipynb
+```
 
-Dependencies:
+> **Note:** Graphviz must also be installed at the system level for tree visualization to work.  
+> Ubuntu/Debian: `sudo apt install graphviz`  
+> macOS: `brew install graphviz`  
+> Windows: [graphviz.org/download](https://graphviz.org/download/)
 
+### B+ Tree — Implementation Details
 
-matplotlib
+The `BPlusTree` class supports a configurable minimum degree `t` (default `t=3`):
 
-numpy
+| Method | Description |
+|--------|-------------|
+| `insert(key, value)` | Inserts a key-value pair; splits nodes automatically when full |
+| `search(key)` | Traverses root → leaf; returns associated value or `None` |
+| `delete(key)` | Removes key; rebalances via borrowing from siblings or merging |
+| `range_query(start, end)` | Scans linked leaf nodes sequentially — no repeated root traversal |
+| `update(key, new_value)` | Locates key in leaf and updates its value in-place |
+| `get_all()` | Returns all key-value pairs in sorted order via leaf-chain traversal |
+| `visualize_tree()` | Returns a `graphviz.Digraph` object of the full tree |
 
-psutil
+**Node fields (`BPlusTreeNode`):**
 
-graphviz
+| Field | Used In | Description |
+|-------|---------|-------------|
+| `keys` | All nodes | Sorted list of keys |
+| `children` | Internal nodes | Pointers to child nodes |
+| `values` | Leaf nodes | Values associated with each key |
+| `next` | Leaf nodes | Pointer to next leaf (linked list for range scans) |
 
-jupyter
+### BruteForceDB — Baseline
 
-pandas
+`BruteForceDB` stores `(key, value)` pairs in a flat Python list. All operations are linear and serve purely as a performance baseline.
 
-Note: Graphviz must also be installed on your system.
+| Operation | Complexity |
+|-----------|------------|
+| Insert | O(1) |
+| Search | O(n) |
+| Delete | O(n) |
+| Range Query | O(n) |
 
+### Performance Analysis
 
-On Ubuntu/Debian: sudo apt install graphviz
+Benchmarks run across dataset sizes: `1,000 | 5,000 | 10,000 | 50,000 | 100,000`
 
+#### Complexity Comparison
 
-On macOS: brew install graphviz
+| Operation | B+ Tree | BruteForceDB |
+|-----------|---------|--------------|
+| Search | O(log n) | O(n) |
+| Insertion | O(log n) | O(1) |
+| Deletion | O(log n) | O(n) |
+| Range Query | O(log n + k) | O(n) |
 
+#### Key Findings
 
-On Windows: Download from graphviz.org
+- **Insertion:** BruteForceDB wins — simple `append()` has no overhead. B+ Tree must traverse and potentially split nodes.
+- **Search:** B+ Tree dominates at scale — logarithmic vs. linear growth.
+- **Deletion:** B+ Tree scales far better; BruteForceDB needs a full scan per delete.
+- **Range Query:** B+ Tree excels due to linked leaf nodes — sequential traversal with no backtracking to root.
+- **Memory:** B+ Tree uses ~2× more memory than BruteForceDB due to node pointers, child arrays, and leaf linkage.
 
-B+ Tree — Implementation Details
+#### Memory Usage
 
-The BPlusTree class supports a minimum degree t (default t=3) and implements:
+| Dataset Size | B+ Tree (bytes) | BruteForce (bytes) |
+|-------------|-----------------|-------------------|
+| 1,000 | 273,880 | 150,419 |
+| 5,000 | 1,287,645 | 707,024 |
+| 10,000 | 2,569,783 | 1,404,706 |
+| 50,000 | 12,746,397 | 6,999,400 |
+| 100,000 | 25,479,148 | 13,900,583 |
 
-MethodDescriptioninsert(key, value)Inserts a key-value pair; splits nodes automatically when fullsearch(key)Traverses from root to leaf; returns value or Nonedelete(key)Removes key; rebalances via borrowing or mergingrange_query(start, end)Efficiently scans linked leaf nodes for keys in rangeupdate(key, new_value)Locates key in leaf and updates its valueget_all()Returns all key-value pairs in sorted order via leaf traversalvisualize_tree()Returns a Graphviz Digraph object rendering the full treeNode structure:
+### Tree Visualization
 
+`visualize_tree()` uses `graphviz.Digraph` to render:
+- **Internal nodes** — light blue fill
+- **Leaf nodes** — light green fill
+- **Leaf linkage** — dashed green edges (the linked list)
 
-BPlusTreeNode.keys — sorted list of keys
+Run cell 24 in `report.ipynb` to generate a live visualization, or view the exported `bptree.png`.
 
-BPlusTreeNode.children — child pointers (internal nodes only)
+---
 
-BPlusTreeNode.values — associated values (leaf nodes only)
+## Module B – Local API Development, RBAC & Database Optimization
 
-BPlusTreeNode.next — pointer to next leaf node (linked list)
+### Overview
 
-BruteForceDB — Baseline
+Module B is a full-stack Flask web application for the ShuttleGo shuttle management system. It connects to a local SQLite database, exposes a REST API with session-based authentication, enforces Role-Based Access Control (RBAC), logs every API action to `audit.log`, and includes live SQL benchmarking before and after index application.
 
-BruteForceDB stores (key, value) pairs in a plain Python list. All operations run in linear time and serve as a performance baseline.
+### Setup & Installation
 
-OperationComplexityInsertO(1)SearchO(n)DeleteO(n)Range QueryO(n)Performance Analysis
+```bash
+cd CS432_Track1_Submission/Module_B
 
-Benchmarks were run across dataset sizes: 1,000 | 5,000 | 10,000 | 50,000 | 100,000
+pip install flask
 
+# Initialize the database (run once)
+sqlite3 shuttlego.db < sql/schema.sql
 
-Complexity Comparison
+# Start the server
+python app.py
+# Open http://localhost:5050
+```
 
-OperationB+ TreeBruteForceDBSearchO(log n)O(n)InsertionO(log n)O(1)DeletionO(log n)O(n)Range QueryO(log n + k)O(n)Key Findings
+### Demo Credentials
 
-Insertion: BruteForceDB is faster — simple append() vs. B+ Tree's traversal and potential node splits.
+| Username | Password | Role | Group |
+|----------|----------|------|-------|
+| `admin` | `admin123` | admin | admin_group |
+| `rajesh` | `user123` | user | passenger_group |
+| `suresh` | `user123` | user | driver_group |
 
-Search: B+ Tree significantly outperforms at scale — logarithmic vs. linear time.
+### Database Schema
 
-Deletion: B+ Tree scales better; BruteForceDB requires full linear scan per delete.
+The SQLite database (`shuttlego.db`) contains 15 tables across two layers:
 
-Range Query: B+ Tree excels due to linked leaf nodes — no repeated root traversals.
+**Core system tables** (authentication and access control):
 
-Memory: B+ Tree uses ~2× more memory than BruteForceDB due to node pointers and structural overhead.
+| Table | Purpose |
+|-------|---------|
+| `users` | Login credentials, role (`admin`/`user`), linked `MemberID` |
+| `group_mappings` | Maps each user to a named RBAC group |
 
-Sample Memory Usage
+**Project-specific tables** (shuttle domain):
 
-Dataset SizeB+ Tree (bytes)BruteForce (bytes)1,000273,880150,4195,0001,287,645707,02410,0002,569,7831,404,70650,00012,746,3976,999,400100,00025,479,14813,900,583Tree Visualization
+| Table | Purpose |
+|-------|---------|
+| `Member` | All system members (passengers and drivers) |
+| `Passenger` | Passenger-specific details — payment preference, assistance needs |
+| `Driver` | Driver-specific details — license, rating, experience |
+| `Vehicle` | Fleet info — model, capacity, GPS device |
+| `VehicleLiveLocation` | Real-time GPS coordinates per vehicle |
+| `VehicleMaintenance` | Service records and scheduled maintenance |
+| `Route` | Named routes with source, destination, fare, and stops |
+| `Trip` | Scheduled trips linking route, vehicle, and driver |
+| `TripOccupancyLog` | Seat occupancy snapshots per trip |
+| `DriverAssignment` | Driver–vehicle–trip assignments per shift |
+| `Booking` | Passenger bookings with QR codes and verification status |
+| `Transaction` | Payments, refunds, and penalties per booking |
+| `BookingCancellation` | Cancellation records with refund/penalty details |
 
-The visualize_tree() method uses graphviz.Digraph to render:
+Cascade deletes are enforced via foreign keys: deleting a `Member` propagates correctly to `Passenger`/`Driver`, `users`, and `group_mappings` — no orphan records.
 
+### SubTask 3 — RBAC Implementation
 
-Internal nodes in light blue
+Two decorators enforce access control on every route:
 
-Leaf nodes in light green
+```python
+@login_required   # Any authenticated user
+@admin_required   # Admin role only
+```
 
-Leaf linkage as dashed green edges (representing the linked list)
+#### Role Permissions
 
-Run cell 24 in report.ipynb to generate a live visualization, or view the exported bptree.png.
+| Action | Admin | Regular User |
+|--------|-------|--------------|
+| View all member profiles | ✅ | ❌ own only |
+| View full contact details | ✅ | ❌ redacted for others |
+| Create / delete members | ✅ | ❌ |
+| Update any member | ✅ | ❌ own `ContactNumber` / `Image` only |
+| View all bookings | ✅ | ❌ own only |
+| Cancel any booking | ✅ | ❌ own only |
+| Manage users and roles | ✅ | ❌ |
+| Apply / drop SQL indexes | ✅ | ❌ |
+| Run benchmark | ✅ | ✅ read-only |
+| View audit logs | ✅ | ❌ |
 
-Module B – Local API Development, RBAC & Database Optimization
+#### RBAC Groups
 
-(Coming soon — see the Module_B folder)
+| Group | Members | Access Level |
+|-------|---------|--------------|
+| `admin_group` | Admin users | Full CRUD, user management, index control, audit log |
+| `driver_group` | Drivers | Own profile, assigned trips |
+| `passenger_group` | Passengers | Own bookings, own profile |
 
-Module B delivers a fully functional web application for the ShuttleGo system with:
+#### Security Audit Logging
 
+Every API call is written to `logs/audit.log`:
 
-Local database setup for shuttle management tables
+```
+TIMESTAMP | LEVEL | USER=<username> ROLE=<role> IP=<ip> VIA=API ACTION=<action> STATUS=<OK|FAIL|FORBIDDEN> DETAIL=<detail>
+```
 
-Secure REST APIs with session-based authentication
+Logged events include: `LOGIN`, `LOGIN_FAILED`, `READ_MEMBERS`, `READ_MEMBER_DENIED`, `ADMIN_ACTION_DENIED`, `CREATE_MEMBER`, `DELETE_MEMBER`, `UPDATE_MEMBER`, `CANCEL_BOOKING_DENIED`, `APPLY_INDEXES`, `DROP_INDEXES`, `BENCHMARK_RUN`, and more.
 
-Role-Based Access Control (Admin vs. Regular User)
+Any database modification made **without** going through the session-validated API (e.g. directly via DB Browser for SQLite) will be absent from the log — making unauthorized changes immediately identifiable.
 
-Member portfolio UI
+### SubTask 4 — SQL Indexing
 
-SQL indexing and query profiling
+10 indexes targeting `WHERE`, `JOIN`, and `ORDER BY` clauses in the most-used API queries:
 
-Submission Notes
+| Index | Table | Column(s) | Targets |
+|-------|-------|-----------|---------|
+| `idx_booking_passenger` | Booking | PassengerID | `WHERE PassengerID = ?` |
+| `idx_booking_trip` | Booking | TripID | `JOIN Trip ON b.TripID` |
+| `idx_booking_status` | Booking | BookingStatus | `WHERE BookingStatus = 'Confirmed'` |
+| `idx_trip_date_status` | Trip | TripDate, Status_ | `WHERE TripDate=? AND Status_=?` |
+| `idx_trip_route` | Trip | RouteID | `JOIN Route ON t.RouteID` |
+| `idx_trip_driver` | Trip | DriverID | `JOIN Driver ON t.DriverID` |
+| `idx_driver_member` | Driver | MemberID | `JOIN Member ON d.MemberID` |
+| `idx_passenger_member` | Passenger | MemberID | `JOIN Member ON p.MemberID` |
+| `idx_member_type` | Member | MemberType | `WHERE MemberType = ?` |
+| `idx_transaction_booking` | Transaction | BookingID | `WHERE BookingID = ?` |
 
-Deadline: 6:00 PM, 22 March 2026
+Indexes can be applied or dropped live from the Admin Panel UI (`/admin`), and their status reflects instantly on the Benchmark page.
 
-GitHub Repository: CS432_Track1_submission (private)
+### SubTask 5 — Performance Benchmarking
 
-Module A video demo linked above
+`POST /api/benchmark/run` runs each of 5 queries **200 times**, recording average, min, and max execution time. `EXPLAIN QUERY PLAN` is run alongside each query to detect the access plan (`FULL TABLE SCAN` vs `INDEX SEEK`).
 
-Module B video demo link included in the Module B report
+#### Benchmark Results
 
+| Query | Before (ms) | After (ms) | Plan Change |
+|-------|-------------|------------|-------------|
+| Bookings by PassengerID | 0.333 | 0.156 | Scan → Index Seek |
+| Bookings JOIN Trip JOIN Route | 0.273 | 0.142 | Improved join traversal |
+| Driver detail by MemberID | 0.396 | 0.126 | Scan → Index Seek |
+| Transactions by BookingID | 0.371 | 0.367 | Scan → Index Seek |
+| Trips by Date + Status | 0.454 | 0.394 | Scan → Composite Index |
+
+The Benchmark page also renders a **before vs. after comparison table** when run twice (once with indexes off, once on).
+
+### API Endpoints
+
+#### Auth
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/login` | Public | Authenticate, start session |
+| POST | `/api/logout` | Any | End session |
+| GET | `/api/me` | Auth | Current user info |
+
+#### Members
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/members` | Auth | List all (contact redacted for non-admin viewing others) |
+| GET | `/api/members/<id>` | Auth | Full detail (own profile or admin) |
+| POST | `/api/members` | Admin | Create new member |
+| PUT | `/api/members/<id>` | Auth | Update (admin: all fields; user: contact + image only) |
+| DELETE | `/api/members/<id>` | Admin | Delete member (cascades to linked tables) |
+
+#### Trips
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/trips` | Auth | List with optional `?status=` and `?date=` filters |
+| GET | `/api/trips/<id>` | Auth | Full trip detail with driver and vehicle info |
+
+#### Bookings
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/bookings` | Auth | All bookings (admin) or own bookings (user) |
+| POST | `/api/bookings` | Auth | Create booking (PassengerID auto-resolved from session) |
+| DELETE | `/api/bookings/<id>` | Auth | Cancel booking (own only, unless admin) |
+
+#### Admin
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/admin/users` | Admin | List all users with roles and groups |
+| PUT | `/api/admin/users/<id>/role` | Admin | Change user role |
+| DELETE | `/api/admin/users/<id>` | Admin | Delete user |
+
+#### Indexing
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/indexes/apply` | Admin | Apply all 10 indexes |
+| POST | `/api/indexes/drop` | Admin | Drop all indexes |
+| GET | `/api/indexes/status` | Auth | List currently active indexes |
+
+#### Benchmarking & Logs
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/benchmark/run` | Auth | Run 200×5 benchmark queries with EXPLAIN plan |
+| GET | `/api/logs` | Admin | Last 200 audit log entries |
+
+---
+
+## Submission Notes
+
+- **Deadline:** 6:00 PM, 22 March 2026
+- Module A video demo linked above
+- Module B video demo link and `report.pdf` to be added before final submission
