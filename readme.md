@@ -383,12 +383,3 @@ Access plans shift from `SCAN` (full table scan) to `SEARCH … USING INDEX` aft
 | GET | `/api/logs` | Admin | Last 200 audit log entries |
 
 ---
-
-## What's Still Needed Before Submission
-
-- [ ] Module B video demo link (add to this README and the Module B report)
-- [ ] Module B optimization report (`report.pdf` or `report.ipynb`)
-- [ ] Run the app with all dependencies installed and actually use it (login as admin, login as user, create/cancel a booking, attempt a forbidden action) so `audit.log` contains real API entries — currently it only has server startup messages and login errors
-
----
-
