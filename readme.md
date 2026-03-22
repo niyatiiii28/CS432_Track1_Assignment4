@@ -15,7 +15,6 @@
 
 **Module A Video Demo:** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg)  
 **Module B Video Demo:** *(link to be added)*  
-**GitHub Repository:** [CS432_Track1_submission](https://github.com/niyatiiii28/CS432_Track1_submission) *(private)*
 
 ---
 
@@ -369,8 +368,3 @@ The Benchmark page also renders a **before vs. after comparison table** when run
 
 ---
 
-## Submission Notes
-
-- **Deadline:** 6:00 PM, 22 March 2026
-- Module A video demo linked above
-- Module B video demo link and `report.pdf` to be added before final submission
