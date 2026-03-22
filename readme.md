@@ -14,7 +14,9 @@
 | Suhani | 24110358 |
 
 **Module A Video Demo:** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg)  
-**Module B Video Demo:** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQA7oXDkT-AuQI-TG58IFU2jAUJTH7oVLLXuJiZf0O1WBD0?e=7zOhbg](https://www.youtube.com/playlist?list=PL-6oo6aPMMVtFdn1hKZg39qWfB-8Lqe0f)  
+**Module B Video Demo:** [Watch here](https://www.youtube.com/playlist?list=PL-6oo6aPMMVtFdn1hKZg39qWfB-8Lqe0f)  
+
+
 ---
 
 ## Project Overview
