@@ -1,0 +1,7 @@
+{"type": "START", "txn": "a04ba7bb-5495-4805-9066-3098602b07c4"}
+{"type": "UPDATE", "txn": "a04ba7bb-5495-4805-9066-3098602b07c4", "table": "Booking", "key": "C1", "old": null, "new": {"BookingID": "C1", "Passenger": "Alice"}}
+{"type": "COMMIT", "txn": "a04ba7bb-5495-4805-9066-3098602b07c4"}
+{"type": "START", "txn": "705e7329-5dff-4f4a-9b88-9304e91e0416"}
+{"type": "UPDATE", "txn": "705e7329-5dff-4f4a-9b88-9304e91e0416", "table": "Booking", "key": "F1", "old": null, "new": {"BookingID": "F1", "Passenger": "Bob"}}
+{"type": "START", "txn": "f99a56f3-84aa-4c9a-923d-75a8c22cf9ef"}
+{"type": "UPDATE", "txn": "f99a56f3-84aa-4c9a-923d-75a8c22cf9ef", "table": "Booking", "key": "CR1", "old": null, "new": {"BookingID": "CR1", "Passenger": "Charlie"}}

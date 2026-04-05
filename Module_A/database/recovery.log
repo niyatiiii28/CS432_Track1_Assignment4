@@ -1,0 +1,67 @@
+===== RECOVERY START =====
+Committed TXNs: 8
+---- REDO START ----
+===== RECOVERY START =====
+Committed TXNs: 23
+---- REDO START ----
+REDO -> aa2d880b-7965-44b8-a794-f743cae59e02 | Booking | A1
+REDO -> 59c76de5-2c15-48b1-84f5-1a2438aa7a66 | Booking | A3
+REDO -> ccf8b246-af00-4172-b35c-71abc88d03f9 | Booking | A5
+REDO -> e4ff3069-81a8-469c-9011-e2e7767dce4b | Booking | C1
+REDO -> 49f7875e-5723-409b-ac29-18083a78d4a9 | Booking | C1
+REDO -> aa16ef5d-ca95-4e8e-b923-8e487030a4cb | Booking | D0
+REDO -> b960220e-de33-42a7-a4a6-7e5d0d364d93 | Booking | D1
+REDO -> 7d4020e6-a0e2-4a55-8d35-35bc57288fc5 | Booking | D2
+REDO -> 863bbde1-d3e5-4f68-b104-765309dbff24 | Booking | I1
+REDO -> 0f2e5a2d-8803-4240-ae8a-ba906beb0b03 | Booking | A1
+REDO -> 51fb02c4-2545-45e0-825e-32c0f41d7121 | Booking | A3
+REDO -> feee5e64-7842-49b6-b245-ee489e006fdf | Booking | A5
+REDO -> b249c0a9-5a16-4165-aa31-ffc49d968056 | Booking | C1
+REDO -> 890676cd-ef9a-4559-b5db-648500494e8a | Booking | C1
+REDO -> 27670407-5d88-4bf0-9a12-4837e0d6df0d | Booking | I1
+REDO -> 6a8be295-18b7-4b6b-9fc4-2ae2a219f8b4 | Booking | A1
+REDO -> 8b7502ff-dbbd-4a0e-96bd-5f2a3779417b | Booking | A3
+REDO -> 1ac67bd5-308a-457a-92b5-f53fb050e204 | Booking | A5
+REDO -> 4443e1ed-e2c2-4fd2-a05e-8117fdfd4e16 | Booking | C1
+REDO -> 36843019-2718-4a6e-957f-8f087286af62 | Booking | C1
+REDO -> a88213f6-9cad-4ba4-9156-6b587503c2d7 | Booking | D0
+REDO -> 22493638-1cf2-4267-9709-367fc687eda9 | Booking | D1
+REDO -> 4042a97d-0249-4488-a556-26f0f8aa5504 | Booking | D2
+---- REDO END ----
+---- UNDO START ----
+UNDO -> e72d597c-9bf1-4dd5-868e-d3fc5882bf48 | Booking | A4
+UNDO -> 9e578599-bf30-4029-b15f-b4771929eed4 | Booking | A2
+UNDO -> 03d5c7b4-8d30-4c99-a5df-441afa58c4e2 | Booking | A0
+UNDO -> 427fe240-1af7-41a9-8483-0ba28937da99 | Booking | A1
+UNDO -> 6f5f527d-d99b-41a9-8152-163f2a5fe98d | Booking | A4
+UNDO -> bc7c32ae-d22b-4f5f-b8c1-d5c9671afe35 | Booking | A2
+UNDO -> e5834e00-9df8-44fe-9cfc-79a75403a083 | Booking | A0
+UNDO -> b11a5e1b-ab83-4d0b-831d-b26a964310dc | Booking | A1
+UNDO -> 4081dded-d07f-4200-8387-087ddfe24357 | Booking | A4
+UNDO -> 20317a6b-07fd-4e06-b5ca-f13d623091ab | Booking | A2
+UNDO -> a31b8da7-f2d7-4102-880c-f8f308485a26 | Booking | A0
+UNDO -> 53a0dc3d-379f-45d7-b9ad-f666f52b0b3a | Booking | A1
+UNDO -> 9651cb2b-d537-4f40-9dbb-240149d77153 | Booking | A1
+---- UNDO END ----
+===== RECOVERY COMPLETE =====
+
+===== RECOVERY START =====
+Committed TXNs: 8
+---- REDO START ----
+REDO -> f5499fb7-8839-4887-a3b9-0152be1cc0c2 | Booking | A1
+REDO -> 6bf2eef2-4cc9-4891-9e86-fc3e38968f50 | Booking | A3
+REDO -> 54afcb8b-207e-4f94-a01a-3727061feb7d | Booking | A5
+REDO -> e65b1ef9-e3e3-40c9-bb8b-4068fccbeb97 | Booking | C1
+REDO -> d2808714-95d1-4da2-8c9a-d034b7dd3c96 | Booking | C1
+REDO -> f11f668c-b91a-4572-96b2-b32ee268d84e | Booking | D0
+REDO -> 6a368a79-abf2-44a5-a817-cfe5655db79e | Booking | D1
+REDO -> 4223b45c-b04b-4c50-bdb1-9532a0bfaa8b | Booking | D2
+---- REDO END ----
+---- UNDO START ----
+UNDO -> 7122535e-cf4d-4d8d-9372-6528eb3fd133 | Booking | A4
+UNDO -> 39118210-883a-4032-8e7d-da05ff6f73af | Booking | A2
+UNDO -> 9fb20be4-6579-48ed-9173-81dcbd6b6133 | Booking | A0
+UNDO -> adf5b577-e3c8-401b-a3e2-b5748f088031 | Booking | A1
+---- UNDO END ----
+===== RECOVERY COMPLETE =====
+

@@ -1,0 +1,10 @@
+{
+  "Booking": {
+    "C1": {
+      "BookingID": "C1",
+      "Passenger": "Alice"
+    }
+  },
+  "Trip": {},
+  "Transaction": {}
+}
