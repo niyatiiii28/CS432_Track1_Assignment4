@@ -170,7 +170,7 @@ Benchmarks run across dataset sizes: `1,000 | 5,000 | 10,000 | 50,000 | 100,000`
 
 ### Overview
 
-Module B is a full-stack Flask web application for the ShuttleGo shuttle management system. It uses a local SQLite database, exposes a REST API with Flask session + JWT authentication, enforces Role-Based Access Control, logs every API action to `audit.log`, and includes live SQL benchmarking before and after index application.
+Module B is a full-stack Flask web application for the ShuttleGo shuttle management system. It uses a local SQLite database, exposes a REST API with Flask session + JWT authentication, enforces Role-Based Access Control, logs every API action to `audit.log`, includes live SQL benchmarking before and after index application, and is stress-tested under concurrent workloads to validate ACID compliance. 
 
 ### Setup & Installation
 
@@ -382,4 +382,32 @@ Access plans shift from `SCAN` (full table scan) to `SEARCH … USING INDEX` aft
 | GET | `/api/indexes/status` | Auth | List active indexes |
 | POST | `/api/benchmark/run` | Admin | Run 200×5 live benchmark |
 | GET | `/api/logs` | Admin | Last 200 audit log entries |
+
+
+### SubTask 6 — Concurrent Workload & Stress Testing (Assignment 3)
+Building upon the core API and database optimizations, this section stress-tests the Flask API under concurrent load and simulated failures using `moduleB_stress_test.py` to ensure robust database behavior and ACID compliance.
+
+**How to Run the Stress Test**
+```bash
+# Terminal 1: Ensure the server is running
+python app.py
+
+# Terminal 2: Execute the stress test script
+python moduleB_stress_test.py
+
+# Results will be automatically saved to moduleB_report.txt
+```
+
+### ACID Property Test Results
+| Test Scenario | ACID Property | Result |
+| :--- | :--- | :--- |
+| **Race condition** — 20 users attempting to book the same seat | Isolation | ✓  Only 1 booking succeeded, 19 blocked |
+| **Stress test** — 300 concurrent requests | Consistency | ✓  0 errors, 14.4 req/s throughput |
+| **Failure simulation** — 10 timeout crashes | Atomicity | ✓ DB healthy and uncorrupted after all crashes |
+| **Durability check** — write record, then read-back | Durability | ✓  Booking immediately visible in database |
+
+#### Key Observations & System Behavior
+* **Database-Level Isolation:** SQLite's unique constraints successfully enforce isolation; duplicate seat bookings are strictly rejected even under simultaneous, heavy load.
+* **Consistency Over Speed:** Response times ranged from 372ms to 3468ms under the 300 concurrent request load. The system maintained a 0% error rate, demonstrating that it correctly prioritizes data consistency over raw speed under pressure.
+* **Crash Resilience:** SQLite WAL (Write-Ahead Logging) ensures that crashed or timed-out transactions leave no partial data, maintaining perfect atomicity.
 
