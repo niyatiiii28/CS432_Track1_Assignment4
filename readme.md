@@ -29,43 +29,62 @@ This assignment is divided into two independent modules:
 
 ## Repository Structure
 
-```
-CS432_Track1_Submission/
+CS432_Assignment3/
 │
-├── Module_A/
+├── Module_A/                          # Custom DB + ACID Engine
+│   │
 │   ├── database/
-│   │   ├── __init__.py
-│   │   ├── bplustree.py              # B+ Tree implementation
-│   │   ├── bruteforce.py             # BruteForceDB baseline
-│   │   └── performance_analyzer.py   # Benchmarking utilities
-│   ├── report.ipynb                  # Full report with benchmarks & visualizations
-│   └── requirements.txt
+│   │   ├── database.py                # Storage layer (tables + B+ Tree)
+│   │   ├── transaction_engine.py      # Transaction manager (ACID, WAL, recovery)
+│   │   ├── bplustree.py               # B+ Tree implementation
+│   │   ├── bruteforce.py              # Baseline search (comparison)
+│   │   ├── performance_analyzer.py    # Benchmarking utilities
+│   │   │
+│   │   ├── acid_test.py               # ACID validation tests
+│   │   ├── test_db.py                 # Basic DB tests
+│   │   ├── test_db_1.py               # Additional DB tests
+│   │   │
+│   │   ├── wal.log                    # Write-Ahead Log (auto-generated)
+│   │   ├── db_state.json              # Persistent DB state
+│   │   ├── recovery.log               # Recovery execution logs
+│   │
+│   ├── requirements.txt               # (No external dependencies)
+│   ├── README.md                      # Module A documentation
 │
-└── Module_B/
-    ├── app.py                        # Main Flask application (SubTasks 3, 4, 5)
-    ├── init_db.py                    # One-command DB initializer + data seeder
-    ├── generate_random_data.py       # Realistic data generator (members, trips, bookings)
-    ├── benchmark.py                  # Standalone CLI benchmarking script (SubTask 5)
-    ├── shuttlego.db                  # SQLite database (auto-created by init_db.py)
-    ├── requirements.txt
-    ├── logs/
-    │   └── audit.log                 # Security audit log (auto-generated)
-    ├── sql/
-    │   ├── schema.sql                # Table definitions + infrastructure seed data
-    │   └── add_indexes.sql           # All SQL indexes (SubTask 4)
-    └── templates/
-        ├── base.html                 # Shared dark-theme layout with RBAC-aware sidebar
-        ├── login.html                # Sign in / Sign up with 3-step registration wizard
-        ├── dashboard.html            # Role-aware home dashboard
-        ├── members.html              # Member portfolio (admin) / own profile (user)
-        ├── trips.html                # Trip browser with live GPS location
-        ├── bookings.html             # Booking management + no-show penalties
-        ├── schedule.html             # Driver shift assignments + vehicle maintenance
-        ├── admin.html                # Control panel — users, RBAC, index management
-        ├── benchmark.html            # Live SQL performance benchmark (SubTask 5)
-        ├── logs.html                 # Audit log viewer (admin-only)
-        └── error.html                # 403 / access denied page
-```
+│
+├── Module_B/                          # Web App + Concurrency Testing
+│   │
+│   ├── app.py                         # Flask application (main API)
+│   ├── api_register_snippet.py        # API snippets
+│   │
+│   ├── init_db.py                     # DB initialization
+│   ├── generate_random_data.py        # Data generation scripts
+│   ├── generate_noshow_penalties.py   # Business logic scripts
+│   │
+│   ├── benchmark.py                   # Performance testing
+│   ├── moduleB_stress_test.py         # Concurrent load testing
+│   │
+│   ├── sql/
+│   │   ├── schema.sql                 # Table schema
+│   │   ├── add_indexes.sql            # Index creation
+│   │
+│   ├── templates/                     # HTML templates (if used)
+│   │
+│   ├── logs/
+│   │   └── audit.log                  # Application logs
+│   │
+│   ├── shuttlego.db                   # SQLite database
+│   ├── moduleB_report.txt             # Module B explanation
+│   ├── requirements.txt               # Flask + dependencies
+│
+│
+├── report.ipynb                       # Analysis + graphs (optional)
+├── requirements.txt                   # (Optional combined)
+│
+├── CS432_Assignment3_report.pdf       # Final report
+├── README.md                          # Main project README
+│
+└── .gitignore
 
 ---
 
