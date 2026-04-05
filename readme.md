@@ -299,14 +299,20 @@ This module successfully implements a **mini database transaction system** with:
 * Clean modular architecture
 
 
-Module B: Concurrent Workload & Stress Testing
 
-Overview
-This module evaluates the ShuttleGo backend under concurrent usage, high load, and failure scenarios. The objective is to ensure that the system maintains ACID properties when multiple users interact with it simultaneously.
+# Module B: Concurrent Workload & Stress Testing
 
-The system simulates real-world conditions using a multi-threaded testing script that generates concurrent API requests to the Flask backend connected to a SQLite database.
+## Overview
 
-Architecture
+This module evaluates the behavior of the ShuttleGo system under concurrent user activity, high request load, and failure scenarios.
+
+The objective is to ensure that the system maintains correct behavior and satisfies ACID properties when multiple users interact with the system simultaneously.
+
+The module uses a custom multi-threaded testing script to simulate real-world usage conditions.
+
+---
+
+## Architecture
 
 Client Simulation (Stress Test Script)
 ↓
@@ -316,149 +322,249 @@ Database (SQLite)
 ↓
 Disk (Persistent Storage + WAL)
 
-Components
+---
 
-1. Backend Server (app.py)
-   Responsible for:
+## Components
 
-* Handling API requests (bookings, trips, users)
-* Managing business logic (seat booking, validation)
-* Ensuring correct responses under concurrent access
+### 1. Backend API (app.py)
 
-2. Database (SQLite)
-   Responsible for:
+Responsible for:
 
-* Storing all application data (Trips, Bookings, Users)
-* Enforcing constraints (e.g., unique seat booking)
-* Handling concurrent read/write operations
+Handling user requests (booking, trips, authentication)
+Processing concurrent API calls
+Ensuring correct database operations
+Maintaining system state under load
 
-3. Stress Testing Script (moduleB_stress_test.py)
-   Responsible for:
+---
 
-* Simulating multiple users using threading
-* Sending concurrent API requests
-* Measuring system performance and correctness
-* Generating reports (moduleB_report.txt)
+### 2. Database (SQLite)
 
-ACID Properties Validation
+Responsible for:
 
-1. Atomicity (All-or-Nothing)
-   Simulated using failure scenarios where requests are terminated mid-execution.
-   Incomplete operations are not committed to the database.
+Storing application data (Trips, Bookings, Users)
+Handling concurrent read/write operations
+Ensuring data integrity using constraints and WAL
 
-Result: No partial or corrupted data is stored
+---
 
-2. Consistency (Valid State)
-   Tested using high-load stress testing with hundreds of requests.
-   All responses return valid results without data corruption.
+### 3. Stress Testing Script (moduleB_stress_test.py)
 
-Result: Database remains in a consistent state
+Responsible for:
 
-3. Isolation (No Interference Between Users)
-   Tested using race condition scenarios where multiple users attempt to book the same seat simultaneously.
-   Only one booking is allowed, and others are rejected.
+Simulating multiple users using threading
+Sending concurrent API requests
+Measuring response times and throughput
+Validating correctness under load and failures
 
-Result: No duplicate bookings occur
+---
 
-4. Durability (Persistence of Data)
-   Tested by creating a booking and immediately reading it back.
-   Committed data is stored in the database and persists across operations.
+## Experiments Performed
 
-Result: Data remains permanently stored after commit
+### 1. Race Condition Test
 
-Experiments Performed
+Simulates multiple users attempting to access the same resource simultaneously.
 
-1. Race Condition Test
+Scenario:
+20 users attempt to book the same seat at the same time
 
-* 20 users attempt to book the same seat simultaneously
-* Verifies isolation and conflict handling
+Expected Behavior:
+Only one booking should succeed
 
-2. Stress Test
+Observed Behavior:
+One request succeeds
+Remaining requests are rejected due to conflict
 
-* 300 concurrent API requests
-* Evaluates system stability and performance
+Result:
+System prevents double-booking and ensures isolation
 
-3. Failure Simulation
+Bonus Scenario:
+Each user books a different seat
 
-* Requests terminated using timeouts
-* Simulates client crashes and network failures
-* Verifies rollback and system stability
+Observation:
+Some requests fail due to database write contention
 
-4. Durability Test
+Conclusion:
+No logical errors; failures are due to SQLite write limitations
 
-* Write followed by immediate read
-* Confirms persistence of committed data
+---
 
-Observations
+### 2. Stress Test
 
-* The system prevents race conditions and duplicate bookings
-* All requests under stress testing return valid responses
-* Failure scenarios do not leave partial data
-* Committed data is immediately visible and persistent
+Simulates high system load using concurrent requests
 
-Limitations
+Scenario:
+300 rapid API requests across multiple endpoints
 
-* SQLite allows only one write operation at a time, limiting concurrency
-* Response times increase under heavy load
-* No advanced concurrency control (e.g., MVCC or fine-grained locking)
-* System operates on a single-node architecture
+Metrics Measured:
+Response time
+Throughput
+Error rate
 
-Files Structure
+Observed Behavior:
+All requests return valid responses
+No errors observed
+Response time increases under load
+
+Result:
+System remains stable and consistent under heavy traffic
+
+---
+
+### 3. Failure Simulation
+
+Simulates abrupt client-side failures during execution
+
+Scenario:
+Requests terminated before completion (timeout-based)
+
+Expected Behavior:
+Incomplete transactions should not be committed
+
+Observed Behavior:
+No partial data stored
+System remains functional after failures
+
+Result:
+Atomicity is maintained
+
+---
+
+### 4. Durability Test
+
+Verifies persistence of committed data
+
+Scenario:
+Create booking and immediately read it back
+
+Expected Behavior:
+Committed data should persist
+
+Observed Behavior:
+Data is successfully stored and retrieved
+
+Result:
+Durability is ensured
+
+---
+
+## ACID Properties Validation
+
+### 1. Atomicity
+
+Incomplete transactions are rolled back during failures
+No partial updates are stored
+
+---
+
+### 2. Consistency
+
+All operations maintain valid database state
+No corrupted or invalid data observed under load
+
+---
+
+### 3. Isolation
+
+Concurrent users do not interfere with each other
+Race condition test confirms prevention of duplicate bookings
+
+---
+
+### 4. Durability
+
+Committed data persists across requests and sessions
+Verified through read-after-write operations
+
+---
+
+## Test Coverage
+
+The module includes tests for:
+
+Race conditions under concurrent access
+High-load stress testing
+Failure scenarios (client crashes)
+Data persistence verification
+
+---
+
+## File Structure
 
 ├── Module_B/
-├── app.py                      # Flask backend
-├── init_db.py                 # Database initialization
-├── moduleB_stress_test.py     # Stress testing script
-├── moduleB_report.txt         # Test results
+├── app.py                     # Flask backend
+├── init_db.py                # Database initialization
+├── moduleB_stress_test.py    # Stress testing script
+├── moduleB_report.txt        # Test output report
 ├── logs/
-└── audit.log              # Server logs
+│   └── audit.log             # Server logs
 └── README.md
 
-How to Run
+---
 
-1. Initialize Database
+## How to Run
 
+### 1. Initialize Database
+
+```bash
 python init_db.py
+```
 
-2. Start Backend Server
+### 2. Start Server
 
+```bash
 python app.py
+```
 
-3. Run Stress Tests
+### 3. Run Stress Tests
 
+```bash
 python moduleB_stress_test.py
+```
 
-Example Flow
+---
 
-Race Condition:
-Multiple users request same seat → only one succeeds
+## Example Flow
 
-Stress Test:
-Hundreds of requests → system processes all correctly
+Before Stress Test:
+System idle, no concurrent load
 
-Failure Simulation:
-Requests interrupted → no partial data stored
+During Stress Test:
+Multiple users send requests simultaneously
+Database handles concurrent operations
 
-Durability:
-Booking created → immediately visible on read
+After Test Completion:
+System remains consistent
+No data corruption observed
 
-Key Design Decisions
+---
 
-* Use of multi-threading to simulate concurrent users
-* Use of HTTP-based API testing to mimic real-world usage
-* Separation between client simulation and backend system
-* Focus on correctness over performance
+## Key Design Decisions
 
-Conclusion
+Use of multi-threading to simulate real users
+Batch-based request execution for controlled load
+Use of SQLite WAL for safe concurrent writes
+Separation of testing logic from application logic
 
-This module successfully demonstrates that the ShuttleGo system can handle concurrent workloads while maintaining correctness and reliability.
+---
+
+## Limitations
+
+SQLite allows only one write at a time, limiting concurrency
+Increased response time under heavy load
+No advanced concurrency control mechanisms (e.g., MVCC)
+Single-node architecture without distributed support
+
+---
+
+## Conclusion
+
+This module successfully validates the system’s behavior under concurrent workloads and failure scenarios.
 
 The system ensures:
+Correct handling of simultaneous user requests
+Prevention of race conditions
+Safe rollback of incomplete transactions
+Reliable persistence of committed data
 
-* Safe handling of simultaneous user operations
-* Proper rollback during failures
-* Consistent system state under load
-* Persistent storage of committed data
-
-Overall, the system achieves ACID compliance in a real-world application setting, with some limitations in scalability due to the use of SQLite.
+Overall, the system demonstrates strong adherence to ACID properties and maintains correctness under real-world usage conditions.
 
