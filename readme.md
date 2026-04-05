@@ -23,8 +23,8 @@
 
 This assignment is divided into two independent modules:
 
-- **Module A** — A lightweight DBMS indexing engine built from scratch using a **B+ Tree**, benchmarked against a brute-force linear approach.
-- **Module B** — A secure full-stack web application (Flask + SQLite) with REST APIs, JWT-based session management, Role-Based Access Control (RBAC), SQL indexing, and live performance benchmarking for the ShuttleGo shuttle management system.
+- **Module A** — Implements a transaction management system on a custom B+ Tree–based database, ensuring ACID properties through buffering, logging, and crash recovery. Focuses on correctness of operations, rollback handling, and maintaining consistency between database records and index structures.
+- **Module B** — Simulates concurrent user workloads on the system to evaluate behavior under multi-user access, failures, and high load conditions. Focuses on ensuring isolation, preventing race conditions, and validating system robustness through stress testing.
 
 ---
 
