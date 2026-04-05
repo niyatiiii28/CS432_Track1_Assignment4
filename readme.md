@@ -27,65 +27,65 @@ This assignment is divided into two independent modules:
 
 ---
 
-## Repository Structure
-
-CS432_Assignment3/
-│
-├── Module_A/                          # Custom DB + ACID Engine
-│   │
-│   ├── database/
-│   │   ├── database.py                # Storage layer (tables + B+ Tree)
-│   │   ├── transaction_engine.py      # Transaction manager (ACID, WAL, recovery)
-│   │   ├── bplustree.py               # B+ Tree implementation
-│   │   ├── bruteforce.py              # Baseline search (comparison)
-│   │   ├── performance_analyzer.py    # Benchmarking utilities
-│   │   │
-│   │   ├── acid_test.py               # ACID validation tests
-│   │   ├── test_db.py                 # Basic DB tests
-│   │   ├── test_db_1.py               # Additional DB tests
-│   │   │
-│   │   ├── wal.log                    # Write-Ahead Log (auto-generated)
-│   │   ├── db_state.json              # Persistent DB state
-│   │   ├── recovery.log               # Recovery execution logs
-│   │
-│   ├── requirements.txt               # (No external dependencies)
-│   ├── README.md                      # Module A documentation
-│
-│
-├── Module_B/                          # Web App + Concurrency Testing
-│   │
-│   ├── app.py                         # Flask application (main API)
-│   ├── api_register_snippet.py        # API snippets
-│   │
-│   ├── init_db.py                     # DB initialization
-│   ├── generate_random_data.py        # Data generation scripts
-│   ├── generate_noshow_penalties.py   # Business logic scripts
-│   │
-│   ├── benchmark.py                   # Performance testing
-│   ├── moduleB_stress_test.py         # Concurrent load testing
-│   │
-│   ├── sql/
-│   │   ├── schema.sql                 # Table schema
-│   │   ├── add_indexes.sql            # Index creation
-│   │
-│   ├── templates/                     # HTML templates (if used)
-│   │
-│   ├── logs/
-│   │   └── audit.log                  # Application logs
-│   │
-│   ├── shuttlego.db                   # SQLite database
-│   ├── moduleB_report.txt             # Module B explanation
-│   ├── requirements.txt               # Flask + dependencies
-│
-│
-├── report.ipynb                       # Analysis + graphs (optional)
-├── requirements.txt                   # (Optional combined)
-│
-├── CS432_Assignment3_report.pdf       # Final report
-├── README.md                          # Main project README
-│
-└── .gitignore
-
+        ## Repository Structure
+        '''
+        CS432_Assignment3/
+        │
+        ├── Module_A/                          # Custom DB + ACID Engine
+        │   │
+        │   ├── database/
+        │   │   ├── database.py                # Storage layer (tables + B+ Tree)
+        │   │   ├── transaction_engine.py      # Transaction manager (ACID, WAL, recovery)
+        │   │   ├── bplustree.py               # B+ Tree implementation
+        │   │   ├── bruteforce.py              # Baseline search (comparison)
+        │   │   ├── performance_analyzer.py    # Benchmarking utilities
+        │   │   │
+        │   │   ├── acid_test.py               # ACID validation tests
+        │   │   ├── test_db.py                 # Basic DB tests
+        │   │   ├── test_db_1.py               # Additional DB tests
+        │   │   │
+        │   │   ├── wal.log                    # Write-Ahead Log (auto-generated)
+        │   │   ├── db_state.json              # Persistent DB state
+        │   │   ├── recovery.log               # Recovery execution logs
+        │   │
+        │   ├── requirements.txt               # (No external dependencies)
+        │   ├── README.md                      # Module A documentation
+        │
+        │
+        ├── Module_B/                          # Web App + Concurrency Testing
+        │   │
+        │   ├── app.py                         # Flask application (main API)
+        │   ├── api_register_snippet.py        # API snippets
+        │   │
+        │   ├── init_db.py                     # DB initialization
+        │   ├── generate_random_data.py        # Data generation scripts
+        │   ├── generate_noshow_penalties.py   # Business logic scripts
+        │   │
+        │   ├── benchmark.py                   # Performance testing
+        │   ├── moduleB_stress_test.py         # Concurrent load testing
+        │   │
+        │   ├── sql/
+        │   │   ├── schema.sql                 # Table schema
+        │   │   ├── add_indexes.sql            # Index creation
+        │   │
+        │   ├── templates/                     # HTML templates (if used)
+        │   │
+        │   ├── logs/
+        │   │   └── audit.log                  # Application logs
+        │   │
+        │   ├── shuttlego.db                   # SQLite database
+        │   ├── moduleB_report.txt             # Module B explanation
+        │   ├── requirements.txt               # Flask + dependencies
+        │
+        │
+        ├── report.ipynb                       # Analysis + graphs (optional)
+        ├── requirements.txt                   # (Optional combined)
+        │
+        ├── CS432_Assignment3_report.pdf       # Final report
+        ├── README.md                          # Main project README
+        │
+        └── .gitignore
+'''
 ---
 
 #  Module A: Transaction Management & ACID Compliance
