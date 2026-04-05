@@ -1,4 +1,4 @@
-# CS 432 – Databases | Track 1 | Assignment 2
+# CS 432 – Databases | Track 1 | Assignment 3
 ## ShuttleGo – Shuttle Management and Booking System
 
 **Course:** CS 432 – Databases | Semester II (2025–2026)  
