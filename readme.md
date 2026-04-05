@@ -27,7 +27,7 @@ This assignment is divided into two independent modules:
 
 ---
 
-        ## Repository Structure
+## Repository Structure
         '''
         CS432_Assignment3/
         │
@@ -85,7 +85,7 @@ This assignment is divided into two independent modules:
         ├── README.md                          # Main project README
         │
         └── .gitignore
-'''
+        '''
 ---
 
 #  Module A: Transaction Management & ACID Compliance
