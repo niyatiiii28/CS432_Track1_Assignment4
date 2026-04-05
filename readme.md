@@ -299,248 +299,166 @@ This module successfully implements a **mini database transaction system** with:
 * Clean modular architecture
 
 
-## Module B – Local API Development, RBAC & Database Optimization
+Module B: Concurrent Workload & Stress Testing
 
-### Overview
+Overview
+This module evaluates the ShuttleGo backend under concurrent usage, high load, and failure scenarios. The objective is to ensure that the system maintains ACID properties when multiple users interact with it simultaneously.
 
-Module B is a full-stack Flask web application for the ShuttleGo shuttle management system. It uses a local SQLite database, exposes a REST API with Flask session + JWT authentication, enforces Role-Based Access Control, logs every API action to `audit.log`, includes live SQL benchmarking before and after index application, and is stress-tested under concurrent workloads to validate ACID compliance. 
+The system simulates real-world conditions using a multi-threaded testing script that generates concurrent API requests to the Flask backend connected to a SQLite database.
 
-### Setup & Installation
+Architecture
 
-```bash
-cd CS432_Track1_Submission/Module_B
+Client Simulation (Stress Test Script)
+↓
+Flask API (app.py)
+↓
+Database (SQLite)
+↓
+Disk (Persistent Storage + WAL)
 
-# Install dependencies
-pip install -r requirements.txt
-# flask>=3.0.0  |  bcrypt>=4.0.0  |  PyJWT>=2.8.0  |  werkzeug>=3.0.0
+Components
 
-# Initialize database + seed all data (run once)
+1. Backend Server (app.py)
+   Responsible for:
+
+* Handling API requests (bookings, trips, users)
+* Managing business logic (seat booking, validation)
+* Ensuring correct responses under concurrent access
+
+2. Database (SQLite)
+   Responsible for:
+
+* Storing all application data (Trips, Bookings, Users)
+* Enforcing constraints (e.g., unique seat booking)
+* Handling concurrent read/write operations
+
+3. Stress Testing Script (moduleB_stress_test.py)
+   Responsible for:
+
+* Simulating multiple users using threading
+* Sending concurrent API requests
+* Measuring system performance and correctness
+* Generating reports (moduleB_report.txt)
+
+ACID Properties Validation
+
+1. Atomicity (All-or-Nothing)
+   Simulated using failure scenarios where requests are terminated mid-execution.
+   Incomplete operations are not committed to the database.
+
+Result: No partial or corrupted data is stored
+
+2. Consistency (Valid State)
+   Tested using high-load stress testing with hundreds of requests.
+   All responses return valid results without data corruption.
+
+Result: Database remains in a consistent state
+
+3. Isolation (No Interference Between Users)
+   Tested using race condition scenarios where multiple users attempt to book the same seat simultaneously.
+   Only one booking is allowed, and others are rejected.
+
+Result: No duplicate bookings occur
+
+4. Durability (Persistence of Data)
+   Tested by creating a booking and immediately reading it back.
+   Committed data is stored in the database and persists across operations.
+
+Result: Data remains permanently stored after commit
+
+Experiments Performed
+
+1. Race Condition Test
+
+* 20 users attempt to book the same seat simultaneously
+* Verifies isolation and conflict handling
+
+2. Stress Test
+
+* 300 concurrent API requests
+* Evaluates system stability and performance
+
+3. Failure Simulation
+
+* Requests terminated using timeouts
+* Simulates client crashes and network failures
+* Verifies rollback and system stability
+
+4. Durability Test
+
+* Write followed by immediate read
+* Confirms persistence of committed data
+
+Observations
+
+* The system prevents race conditions and duplicate bookings
+* All requests under stress testing return valid responses
+* Failure scenarios do not leave partial data
+* Committed data is immediately visible and persistent
+
+Limitations
+
+* SQLite allows only one write operation at a time, limiting concurrency
+* Response times increase under heavy load
+* No advanced concurrency control (e.g., MVCC or fine-grained locking)
+* System operates on a single-node architecture
+
+Files Structure
+
+├── Module_B/
+├── app.py                      # Flask backend
+├── init_db.py                 # Database initialization
+├── moduleB_stress_test.py     # Stress testing script
+├── moduleB_report.txt         # Test results
+├── logs/
+└── audit.log              # Server logs
+└── README.md
+
+How to Run
+
+1. Initialize Database
+
 python init_db.py
 
-# Start the server
-python app.py
-# Open http://127.0.0.1:5050
-```
+2. Start Backend Server
 
-`init_db.py` drops and recreates all tables from `sql/schema.sql`, seeds infrastructure data (vehicles, routes, maintenance), creates the admin user, then calls `generate_random_data.py` to populate ~150 members, ~500 trips, and all associated bookings, transactions, cancellations, and driver assignments automatically.
-
-### Demo Credentials
-
-| Username | Password | Role | Group |
-|----------|----------|------|-------|
-| `admin` | `admin123` | admin | admin_group |
-| *(generated)* | `user123` | user | passenger_group or driver_group |
-
-> Regular user credentials are generated by `generate_random_data.py`. After running `init_db.py`, check the printed output for sample usernames, or log in as admin and visit the Control Panel to see all users.
-
-### Database Schema
-
-`shuttlego.db` contains 15 tables across two layers. Infrastructure seed data (vehicles, routes, maintenance records) is loaded from `sql/schema.sql`. All people-dependent data is generated by `generate_random_data.py`.
-
-**Core system tables:**
-
-| Table | Purpose |
-|-------|---------|
-| `users` | Login credentials, role (`admin`/`user`), linked `MemberID` |
-| `group_mappings` | Maps each user to a named RBAC group |
-
-**Project-specific tables:**
-
-| Table | Purpose |
-|-------|---------|
-| `Member` | All system members (passengers and drivers) |
-| `Passenger` | Payment preference, emergency contact, assistance needs |
-| `Driver` | License, rating, experience years, status |
-| `Vehicle` | Fleet info — model, capacity, GPS device ID |
-| `VehicleLiveLocation` | Real-time GPS coordinates per vehicle |
-| `VehicleMaintenance` | Service records and scheduled maintenance |
-| `Route` | Named routes with source, destination, fares, intermediate stops |
-| `Trip` | Scheduled trips linking route, vehicle, and driver |
-| `TripOccupancyLog` | Seat occupancy snapshots per trip |
-| `DriverAssignment` | Driver–vehicle–trip assignments per shift |
-| `Booking` | Passenger bookings with QR codes and verification status |
-| `Transaction` | Payments, refunds, and penalties per booking |
-| `BookingCancellation` | Cancellation records with refund/penalty breakdown |
-| `NoShowPenalty` | Auto-generated penalties for no-show bookings |
-
-Foreign key cascade deletes are enforced: deleting a `Member` propagates correctly to `Passenger`/`Driver`, `users`, and `group_mappings` — no orphan records.
-
-### SubTask 3 — RBAC Implementation
-
-Two decorators enforce access control on every route:
-
-```python
-@login_required   # Any authenticated user (checks Flask session)
-@admin_required   # Admin role only — returns 403 otherwise and logs the attempt
-```
-
-Authentication uses both **Flask sessions** (for browser UI) and **JWT tokens** (returned on login, validated via `/isAuth`).
-
-#### Role Permissions
-
-| Action | Admin | Regular User |
-|--------|-------|--------------|
-| View all member profiles | ✅ | ❌ own profile only |
-| View full contact details | ✅ | ❌ own only |
-| Create / delete members | ✅ | ❌ |
-| Update member fields | ✅ all fields | ❌ `ContactNumber` / `Image` only |
-| View all bookings | ✅ | ❌ own only |
-| Cancel any booking | ✅ | ❌ own only |
-| View no-show penalties | ✅ all | ❌ own only |
-| View vehicle live location | ✅ all | ❌ own active trips only |
-| View driver assignments | ✅ all | ❌ own assignments only |
-| View vehicle maintenance | ✅ all + cost | ❌ own vehicles, no cost |
-| Manage users and roles | ✅ | ❌ |
-| Apply / drop SQL indexes | ✅ | ❌ |
-| Run benchmark | ✅ | ❌ |
-| View audit logs | ✅ | ❌ |
-| Change own password | ✅ | ✅ |
-| Register new account | public | public |
-
-#### RBAC Groups
-
-| Group | Access Level |
-|-------|--------------|
-| `admin_group` | Full CRUD, user management, index control, audit log, benchmark |
-| `driver_group` | Own profile, own shift assignments, vehicle maintenance (no cost), trip list |
-| `passenger_group` | Own bookings, own penalties, own profile, vehicle location for active trips |
-
-#### Security Audit Logging
-
-Every API call is written to `logs/audit.log`:
-
-```
-TIMESTAMP | LEVEL | USER=<username> ROLE=<role> IP=<ip> VIA=API ACTION=<action> STATUS=<OK|FAIL|FORBIDDEN> DETAIL=<detail>
-```
-
-Logged actions include: `LOGIN`, `LOGIN_FAILED`, `LOGOUT`, `REGISTER`, `PASSWORD_CHANGED`, `READ_MEMBERS`, `READ_MEMBER_DENIED`, `ADMIN_ACTION_DENIED`, `CREATE_MEMBER`, `DELETE_MEMBER`, `UPDATE_MEMBER`, `CREATE_BOOKING`, `CANCEL_BOOKING`, `CANCEL_BOOKING_DENIED`, `READ_VEHICLE_LOCATION_DENIED`, `APPLY_INDEXES`, `DROP_INDEXES`, `BENCHMARK_RUN`, `READ_LOGS`.
-
-Any database modification made **without** going through the session-validated API (e.g. directly via DB Browser for SQLite) will be absent from the log — making unauthorized changes immediately identifiable.
-
-### SubTask 4 — SQL Indexing
-
-Indexes are defined in two places: `sql/add_indexes.sql` (applied at init time) and `app.py`'s `INDEXES` list (applied/dropped live from the Admin UI). The full set targets `WHERE`, `JOIN`, and `ORDER BY` clauses across the most-used API queries:
-
-| Index | Table | Column(s) | Query Pattern |
-|-------|-------|-----------|---------------|
-| `idx_users_username` | users | username | `WHERE username = ?` — every login |
-| `idx_users_member_id` | users | MemberID | JWT → MemberID resolution |
-| `idx_booking_passenger_id` | Booking | PassengerID | `WHERE PassengerID = ?` |
-| `idx_booking_trip_id` | Booking | TripID | `JOIN Trip ON b.TripID` |
-| `idx_booking_time` | Booking | BookingTime DESC | `ORDER BY BookingTime DESC` |
-| `idx_trip_date` | Trip | TripDate DESC | `ORDER BY TripDate DESC` |
-| `idx_trip_route_id` | Trip | RouteID | `JOIN Route ON t.RouteID` |
-| `idx_trip_driver_id` | Trip | DriverID | `JOIN Driver ON t.DriverID` |
-| `idx_trip_vehicle_id` | Trip | VehicleID | `JOIN Vehicle ON t.VehicleID` |
-| `idx_transaction_booking_id` | Transaction | BookingID | `WHERE BookingID = ?` |
-| `idx_transaction_date` | Transaction | TransactionDate DESC | `ORDER BY TransactionDate DESC` |
-| `idx_driver_member_id` | Driver | MemberID | `WHERE MemberID = ?` — RBAC self-check |
-| `idx_passenger_member_id` | Passenger | MemberID | `WHERE MemberID = ?` — RBAC self-check |
-| `idx_assignment_driver_id` | DriverAssignment | DriverID | `WHERE DriverID = ?` |
-| `idx_assignment_trip_id` | DriverAssignment | TripID | `WHERE TripID = ?` |
-| `idx_cancellation_booking_id` | BookingCancellation | BookingID | `WHERE BookingID = ?` |
-
-### SubTask 5 — Performance Benchmarking
-
-Two benchmarking paths are available:
-
-**Live UI benchmark** (`/benchmark`, admin only): `POST /api/benchmark/run` runs 5 queries × 200 iterations each, recording avg/min/max execution time. `EXPLAIN QUERY PLAN` detects `FULL TABLE SCAN` vs `INDEX SEEK`. A before/after comparison table appears when run twice.
-
-**CLI benchmark** (`python benchmark.py`): Runs 12 queries × 500 iterations each, drops all indexes, measures baseline, applies indexes, measures again, and writes a full report to `benchmark_report.txt` including median/mean/min/max and `EXPLAIN QUERY PLAN` output for every query.
-
-#### Benchmark Results (from `benchmark.py`, 500 runs, medians)
-
-| Query | Before (µs) | After (µs) | Speedup |
-|-------|-------------|------------|---------|
-| Login lookup by username | ~320 | ~85 | ~3.8× |
-| Passenger bookings (WHERE PassengerID) | ~280 | ~70 | ~4× |
-| Recent bookings (ORDER BY BookingTime DESC) | ~410 | ~95 | ~4.3× |
-| List trips with JOINs (ORDER BY TripDate) | ~520 | ~140 | ~3.7× |
-| Passenger transactions via JOIN | ~350 | ~90 | ~3.9× |
-| Driver profile by MemberID | ~190 | ~55 | ~3.5× |
-
-Access plans shift from `SCAN` (full table scan) to `SEARCH … USING INDEX` after index application, confirmed via `EXPLAIN QUERY PLAN`.
-
-### API Endpoints
-
-#### Auth & Registration
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/login` | Public | Authenticate; returns Flask session + JWT token |
-| POST | `/api/logout` | Any | Clear session |
-| POST | `/api/register` | Public | Self-registration (creates Member + Passenger/Driver stub + user) |
-| GET | `/isAuth` | Any | Validate JWT token; returns username, role, expiry |
-| GET | `/api/me` | Auth | Current user info from session |
-| PUT | `/api/me/password` | Auth | Change own password |
-
-#### Members
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/members` | Auth | All members (admin) or own profile (user) |
-| GET | `/api/members/<id>` | Auth | Full detail — own profile or admin only |
-| POST | `/api/members` | Admin | Create new member |
-| PUT | `/api/members/<id>` | Auth | Admin: all fields; user: `ContactNumber`/`Image` only |
-| DELETE | `/api/members/<id>` | Admin | Delete member (cascades to all linked tables) |
-
-#### Trips & Vehicles
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/trips` | Auth | List with optional `?status=` / `?date=` filters |
-| GET | `/api/trips/<id>` | Auth | Full trip detail with driver and vehicle info |
-| GET | `/api/vehicles/locations` | Auth | All latest GPS locations (admin) or own active trips (user) |
-| GET | `/api/vehicles/<id>/location` | Auth | Single vehicle GPS — enforces booking/assignment check for non-admin |
-
-#### Bookings & Penalties
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/bookings` | Auth | All bookings (admin) or own bookings (user) |
-| POST | `/api/bookings` | Auth | Create booking (PassengerID auto-resolved from session) |
-| DELETE | `/api/bookings/<id>` | Auth | Cancel booking (own only unless admin) |
-| GET | `/api/my/penalties` | Auth | No-show penalties (all for admin, own for passenger) |
-
-#### Driver Schedule
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/my/assignments` | Auth | All assignments (admin) or own shift assignments (driver) |
-| GET | `/api/my/maintenance` | Auth | All maintenance (admin) or own vehicles' records (driver) |
-
-#### Admin
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/admin/users` | Admin | All users with roles and groups |
-| PUT | `/api/admin/users/<id>/role` | Admin | Change user role |
-| DELETE | `/api/admin/users/<id>` | Admin | Delete user |
-| POST | `/api/indexes/apply` | Admin | Apply all indexes |
-| POST | `/api/indexes/drop` | Admin | Drop all indexes |
-| GET | `/api/indexes/status` | Auth | List active indexes |
-| POST | `/api/benchmark/run` | Admin | Run 200×5 live benchmark |
-| GET | `/api/logs` | Admin | Last 200 audit log entries |
-
-
-### SubTask 6 — Concurrent Workload & Stress Testing (Assignment 3)
-Building upon the core API and database optimizations, this section stress-tests the Flask API under concurrent load and simulated failures using `moduleB_stress_test.py` to ensure robust database behavior and ACID compliance.
-
-**How to Run the Stress Test**
-```bash
-# Terminal 1: Ensure the server is running
 python app.py
 
-# Terminal 2: Execute the stress test script
+3. Run Stress Tests
+
 python moduleB_stress_test.py
 
-# Results will be automatically saved to moduleB_report.txt
-```
+Example Flow
 
-### ACID Property Test Results
-| Test Scenario | ACID Property | Result |
-| :--- | :--- | :--- |
-| **Race condition** — 20 users attempting to book the same seat | Isolation | ✓  Only 1 booking succeeded, 19 blocked |
-| **Stress test** — 300 concurrent requests | Consistency | ✓  0 errors, 14.4 req/s throughput |
-| **Failure simulation** — 10 timeout crashes | Atomicity | ✓ DB healthy and uncorrupted after all crashes |
-| **Durability check** — write record, then read-back | Durability | ✓  Booking immediately visible in database |
+Race Condition:
+Multiple users request same seat → only one succeeds
 
-#### Key Observations & System Behavior
-* **Database-Level Isolation:** SQLite's unique constraints successfully enforce isolation; duplicate seat bookings are strictly rejected even under simultaneous, heavy load.
-* **Consistency Over Speed:** Response times ranged from 372ms to 3468ms under the 300 concurrent request load. The system maintained a 0% error rate, demonstrating that it correctly prioritizes data consistency over raw speed under pressure.
-* **Crash Resilience:** SQLite WAL (Write-Ahead Logging) ensures that crashed or timed-out transactions leave no partial data, maintaining perfect atomicity.
+Stress Test:
+Hundreds of requests → system processes all correctly
+
+Failure Simulation:
+Requests interrupted → no partial data stored
+
+Durability:
+Booking created → immediately visible on read
+
+Key Design Decisions
+
+* Use of multi-threading to simulate concurrent users
+* Use of HTTP-based API testing to mimic real-world usage
+* Separation between client simulation and backend system
+* Focus on correctness over performance
+
+Conclusion
+
+This module successfully demonstrates that the ShuttleGo system can handle concurrent workloads while maintaining correctness and reliability.
+
+The system ensures:
+
+* Safe handling of simultaneous user operations
+* Proper rollback during failures
+* Consistent system state under load
+* Persistent storage of committed data
+
+Overall, the system achieves ACID compliance in a real-world application setting, with some limitations in scalability due to the use of SQLite.
 
