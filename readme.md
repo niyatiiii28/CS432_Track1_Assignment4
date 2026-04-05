@@ -70,101 +70,234 @@ CS432_Track1_Submission/
 
 ---
 
-## Module A – Lightweight DBMS with B+ Tree Index
+#  Module A: Transaction Management & ACID Compliance
 
-### Overview
+##  Overview
 
-Module A implements a B+ Tree–based indexing engine and compares it against a `BruteForceDB` (plain Python list) approach. Performance is measured across insertion, search, deletion, range queries, and memory usage for dataset sizes from 1,000 to 100,000 elements.
+This module implements a **transaction management system** on top of a custom database with a **B+ Tree index**, ensuring full **ACID compliance**.
 
-### File Descriptions
+The system is designed with a clear separation of concerns:
 
-| File | Description |
-|------|-------------|
-| `database/bplustree.py` | Full B+ Tree with insert, delete, search, range query, update, get_all, and Graphviz visualization |
-| `database/bruteforce.py` | `BruteForceDB` baseline using a Python list |
-| `database/performance_analyzer.py` | `PerformanceAnalyzer` class for timing and deep memory measurement |
-| `report.ipynb` | Jupyter notebook — implementation walkthrough, benchmarking plots, tree visualizations, conclusions |
-| `requirements.txt` | Python dependencies |
-
-### Setup & Installation
-
-```bash
-cd CS432_Track1_Submission/Module_A
-
-pip install -r requirements.txt
-# Also install Graphviz at system level:
-# Ubuntu: sudo apt install graphviz
-# macOS:  brew install graphviz
-
-jupyter notebook report.ipynb
-```
-
-### B+ Tree — Implementation Details
-
-The `BPlusTree` class uses a configurable minimum degree `t` (default `t=3`):
-
-| Method | Description |
-|--------|-------------|
-| `insert(key, value)` | Inserts a key-value pair; splits nodes automatically when full |
-| `search(key)` | Traverses root → leaf; returns value or `None` |
-| `delete(key)` | Removes key; rebalances via borrowing or merging |
-| `range_query(start, end)` | Scans linked leaf nodes sequentially — no repeated root traversal |
-| `update(key, new_value)` | Locates key in leaf and updates value in-place |
-| `get_all()` | Returns all key-value pairs in sorted order via leaf-chain traversal |
-| `visualize_tree()` | Returns a `graphviz.Digraph` rendering the full tree |
-
-**`BPlusTreeNode` fields:**
-
-| Field | Used In | Description |
-|-------|---------|-------------|
-| `keys` | All nodes | Sorted list of keys |
-| `children` | Internal nodes | Pointers to child nodes |
-| `values` | Leaf nodes | Values associated with each key |
-| `next` | Leaf nodes | Pointer to next leaf (linked list for range scans) |
-
-### BruteForceDB — Baseline
-
-`BruteForceDB` stores `(key, value)` pairs in a flat Python list for baseline comparison.
-
-| Operation | Complexity |
-|-----------|------------|
-| Insert | O(1) |
-| Search | O(n) |
-| Delete | O(n) |
-| Range Query | O(n) |
-
-### Performance Analysis
-
-Benchmarks run across dataset sizes: `1,000 | 5,000 | 10,000 | 50,000 | 100,000`
-
-| Operation | B+ Tree | BruteForceDB |
-|-----------|---------|--------------|
-| Search | O(log n) | O(n) |
-| Insertion | O(log n) | O(1) |
-| Deletion | O(log n) | O(n) |
-| Range Query | O(log n + k) | O(n) |
-
-**Key findings:**
-- **Insertion:** BruteForceDB wins — simple `append()` vs. B+ Tree's traversal and node splits.
-- **Search & Deletion:** B+ Tree dominates at scale — logarithmic vs. linear growth.
-- **Range Query:** B+ Tree excels via linked leaf nodes — sequential traversal, no backtracking to root.
-- **Memory:** B+ Tree uses ~2× more memory due to node pointers and leaf linkage overhead.
-
-#### Memory Usage
-
-| Dataset Size | B+ Tree (bytes) | BruteForce (bytes) |
-|-------------|-----------------|-------------------|
-| 1,000 | 273,880 | 150,419 |
-| 5,000 | 1,287,645 | 707,024 |
-| 10,000 | 2,569,783 | 1,404,706 |
-| 50,000 | 12,746,397 | 6,999,400 |
-| 100,000 | 25,479,148 | 13,900,583 |
-
-### Tree Visualization
-
-`visualize_tree()` uses `graphviz.Digraph` to render internal nodes (light blue), leaf nodes (light green), and leaf linkage (dashed green edges). Run cell 24 in `report.ipynb` or view `bptree.png`.
+* **Database Layer** → Handles storage, indexing, and persistence
+* **Transaction Engine** → Handles transactions, logging, recovery, and ACID guarantees
 
 ---
+
+##  Architecture
+
+```
+Application (Tests)
+        ↓
+Transaction Engine
+        ↓
+Database (Tables + B+ Tree Index)
+        ↓
+Disk (WAL + DB State)
+```
+
+---
+
+## ⚙️ Components
+
+### 1. Database (`database.py`)
+
+Responsible for:
+
+* Managing tables (`Booking`, `Trip`, `Transaction`)
+* Maintaining B+ Tree indexes
+* Applying changes (insert/update/delete)
+* Persisting data to disk (`db_state.json`)
+
+---
+
+### 2. Transaction Engine (`transaction_engine.py`)
+
+Responsible for:
+
+* Transaction lifecycle (`begin`, `commit`, `rollback`)
+* Write-Ahead Logging (WAL)
+* Transaction buffer (for isolation)
+* Crash recovery (REDO + UNDO)
+
+---
+
+### 3. Write-Ahead Log (`wal.log`)
+
+Stores all operations before they are applied:
+
+* `START` → Transaction begins
+* `UPDATE` → Data modification
+* `COMMIT` → Transaction success
+
+---
+
+##  ACID Properties Implementation
+
+###  1. Atomicity (All-or-Nothing)
+
+* Changes are first stored in a **transaction buffer**
+* On failure → `rollback()` restores previous state using logs
+* On success → `commit()` applies all changes
+
+**Result:** No partial updates occur
+
+---
+
+###  2. Consistency (Valid State)
+
+* Each operation maintains valid database structure
+* Duplicate keys are handled as **updates**
+* B+ Tree index is always synchronized with tables
+
+**Result:** Database always remains valid
+
+---
+
+###  3. Isolation (No Dirty Reads)
+
+* Each transaction has its own **private buffer**
+* Uncommitted changes are **not visible** to other transactions
+
+```
+txn1 → writes in buffer
+txn2 → cannot see txn1 data
+```
+
+**Result:** No dirty reads
+
+---
+
+### 4. Durability (Survives Crashes)
+
+* All operations are written to **WAL before execution**
+* On crash → recovery process:
+
+  * **REDO** committed transactions
+  * **UNDO** uncommitted transactions
+
+**Result:** Committed data is never lost
+
+---
+
+## Recovery Process
+
+When the system restarts:
+
+1. Read WAL (`wal.log`)
+2. Identify committed transactions
+3. Apply:
+
+   * **REDO** → Reapply committed updates
+   * **UNDO** → Revert incomplete transactions
+4. Persist final state
+
+---
+
+##  Test Coverage
+
+The module includes tests for:
+
+###  Atomicity
+
+* Single transaction rollback
+* Multiple transactions with mixed success/failure
+
+###  Consistency
+
+* Duplicate key update behavior
+
+###  Durability
+
+* Crash simulation using `os._exit(1)`
+* Recovery using WAL replay
+
+###  Isolation
+
+* Verifies that uncommitted data is not visible across transactions
+
+---
+
+##  Files Structure
+
+```
+├── Module_A/
+    ├── database/
+        ├── database.py              # Storage + B+ Tree
+        ├── transaction_engine.py   # Transaction logic
+        ├── acid_test.py           # ACID property tests
+        ├── wal.log                # Write-Ahead Log
+        ├── db_state.json          # Persistent database
+        ├── recovery.log           # Recovery tracing
+        └── README.md
+        ```
+
+---
+
+##  How to Run
+
+### 1. Run ACID Tests
+
+```bash
+python acid_test.py
+```
+
+### 2. Choose test:
+
+```
+1 → Atomicity
+2 → Atomicity (Multiple)
+3 → Consistency
+4 → Crash
+5 → Recovery
+6 → Isolation
+```
+
+---
+
+## Example Flow
+
+### Before Commit:
+
+```
+Buffer: contains data
+Database: unchanged
+```
+
+### After Commit:
+
+```
+Buffer: cleared
+Database: updated
+```
+
+### After Rollback:
+
+```
+Buffer: cleared
+Database: unchanged
+```
+
+---
+
+## Key Design Decisions
+
+* Separation of **Database vs Transaction Engine**
+* Use of **Write-Ahead Logging**
+* Use of **transaction-local buffers** for isolation
+* Implementation of **REDO + UNDO recovery**
+
+---
+
+## Conclusion
+
+This module successfully implements a **mini database transaction system** with:
+
+* Full ACID compliance
+* Crash recovery
+* Logging
+* Isolation via buffering
+* Clean modular architecture
+
 
 ## Module B – Local API Development, RBAC & Database Optimization
 
