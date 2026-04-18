@@ -1,6 +1,0 @@
-matplotlib
-numpy
-psutil
-graphviz
-jupyter
-pandas
