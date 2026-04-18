@@ -31,18 +31,19 @@ Shards: MySQL instances running on ports 3307, 3308, and 3309.
 
 🗂️ Project Structure
 Plaintext
-'''
-Module_B/
-        ├── app.py                      # Main Flask/FastAPI application
-        ├── init_db.py                  # Database initialization script
-        ├── generate_random_data.py      # Seed data generator
-        ├── generate_noshow_penalties.py # Penalty logic processor
-        ├── sql/
-        │   ├── schema.sql              # Table definitions
-        │   └── add_indexes.sql         # Performance optimization
-        ├── moduleB_stress_test.py      # Load testing script
-        └── logs/                       # System logs
-'''
+        '''
+        Module_B/
+        
+                ├── app.py                      # Main Flask/FastAPI application
+                ├── init_db.py                  # Database initialization script
+                ├── generate_random_data.py      # Seed data generator
+                ├── generate_noshow_penalties.py # Penalty logic processor
+                ├── sql/
+                │   ├── schema.sql              # Table definitions
+                │   └── add_indexes.sql         # Performance optimization
+                ├── moduleB_stress_test.py      # Load testing script
+                └── logs/                       # System logs
+        '''
 🏗️ Architecture Design
 🔹 Sharded Tables
 Distributed across all shards based on MemberID.
