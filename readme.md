@@ -16,89 +16,110 @@
 **Video Demo:** [Watch here](https://iitgnacin-my.sharepoint.com/:v:/g/personal/23110312_iitgn_ac_in/IQCSNpGj8tufTL_OPGmM-vXzAToJjEt68GKRbbQ8I-7yeP4)  
 
 
-📌 Overview
-This project extends the ShuttleGo system to a distributed architecture using MySQL sharding. Data is partitioned across three shards to ensure high availability and scalability.
 
-🧠 Sharding Logic
-We use Hash-based partitioning to ensure balanced data distribution.
+## 📌 Overview
 
-Shard Key: MemberID
+This project extends the **ShuttleGo** system to a distributed architecture using **MySQL sharding**. Data is partitioned across three shards to ensure high availability and scalability.
 
-Routing Logic:
+---
 
-shard_id=MemberID(mod3)
-Shards: MySQL instances running on ports 3307, 3308, and 3309.
+## 🧠 Sharding Logic
 
-🗂️ Project Structure
+We use **Hash-based partitioning** to ensure balanced data distribution.
 
+- **Shard Key:** `MemberID`
+- **Routing Logic:**
 
-        '''
-        
-        Module_B/
-                ├── app.py                      # Main Flask/FastAPI application
-                ├── init_db.py                  # Database initialization script
-                ├── generate_random_data.py      # Seed data generator
-                ├── generate_noshow_penalties.py # Penalty logic processor
-                ├── sql/
-                │   ├── schema.sql              # Table definitions
-                │   └── add_indexes.sql         # Performance optimization
-                ├── moduleB_stress_test.py      # Load testing script
-                └── logs/                       # System logs
-        '''
-🏗️ Architecture Design
-🔹 Sharded Tables
-Distributed across all shards based on MemberID.
+$$\text{shard\_id} = \text{MemberID} \mod 3$$
 
-Member / Passenger / Driver
+- **Shards:** MySQL instances running on ports `3307`, `3308`, and `3309`.
 
-Booking / Transaction
+---
 
-BookingCancellation / NoShowPenalty
+## 🗂️ Project Structure
 
-users / group_mappings
+```
+Module_B/
+├── app.py                       # Main Flask/FastAPI application
+├── init_db.py                   # Database initialization script
+├── generate_random_data.py      # Seed data generator
+├── generate_noshow_penalties.py # Penalty logic processor
+├── sql/
+│   ├── schema.sql               # Table definitions
+│   └── add_indexes.sql          # Performance optimization
+├── moduleB_stress_test.py       # Load testing script
+└── logs/                        # System logs
+```
 
-🔹 Global Tables
-Stored exclusively in Shard 0 (Primary Reference Shard).
+---
 
-Vehicle
+## 🏗️ Architecture Design
 
-Route
+### 🔹 Sharded Tables
+Distributed across **all shards** based on `MemberID`.
 
-Trip
+- `Member` / `Passenger` / `Driver`
+- `Booking` / `Transaction`
+- `BookingCancellation` / `NoShowPenalty`
+- `users` / `group_mappings`
 
-DriverAssignment
+### 🔹 Global Tables
+Stored exclusively in **Shard 0** *(Primary Reference Shard)*.
 
-⚙️ Setup & Installation
-Activate Environment
+- `Vehicle`
+- `Route`
+- `Trip`
+- `DriverAssignment`
 
-Bash
+---
+
+## ⚙️ Setup & Installation
+
+### 1. Activate Environment
+
+```bash
 source .venv/bin/activate
-Initialize Databases
+```
+
+### 2. Initialize Databases
+
 This script creates schemas on all shards, inserts the admin user, and generates the initial dataset.
 
-Bash
+```bash
 python init_db.py
-Run the Server
+```
 
-Bash
+### 3. Run the Server
+
+```bash
 python app.py
-The API will be available at: http://127.0.0.1:5050
+```
 
-Stress Testing (Optional)
+The API will be available at: **http://127.0.0.1:5050**
 
-Bash
+### 4. Stress Testing *(Optional)*
+
+```bash
 python moduleB_stress_test.py
-🔀 Query Routing Rules
-Query Type	Execution Logic
-Point Queries	Routed directly to a specific shard using MemberID % 3.
-Insertions	Data is hashed and stored in the designated shard.
-Range Queries	Scatter-Gather: Queries all shards and merges results in the app layer.
-[!TIP]
-Optimization Note: All related data for a specific member is co-located in the same shard to avoid expensive cross-shard joins.
+```
 
-📊 Notes
-Balanced Distribution: Hash-based routing prevents "hot shards."
+---
 
-Global Table Strategy: Static reference data is centralized in Shard 0 to maintain referential integrity without complexity.
+## 🔀 Query Routing Rules
 
-Minimized Latency: Point queries bypass the need to search multiple databases.
+| Query Type | Execution Logic |
+|---|---|
+| **Point Queries** | Routed directly to a specific shard using `MemberID % 3`. |
+| **Insertions** | Data is hashed and stored in the designated shard. |
+| **Range Queries** | *Scatter-Gather:* Queries all shards and merges results in the app layer. |
+
+> [!TIP]
+> **Optimization Note:** All related data for a specific member is co-located in the same shard to avoid expensive cross-shard joins.
+
+---
+
+## 📊 Notes
+
+- **Balanced Distribution:** Hash-based routing prevents "hot shards."
+- **Global Table Strategy:** Static reference data is centralized in Shard 0 to maintain referential integrity without complexity.
+- **Minimized Latency:** Point queries bypass the need to search multiple databases.
