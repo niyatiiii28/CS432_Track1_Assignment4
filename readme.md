@@ -30,10 +30,11 @@ shard_id=MemberID(mod3)
 Shards: MySQL instances running on ports 3307, 3308, and 3309.
 
 🗂️ Project Structure
-Plaintext
+
+
         '''
-        Module_B/
         
+        Module_B/
                 ├── app.py                      # Main Flask/FastAPI application
                 ├── init_db.py                  # Database initialization script
                 ├── generate_random_data.py      # Seed data generator
