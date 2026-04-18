@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Control Panel – ShuttleGo{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>⚙ Control Panel</h1>
+  <span class="tag tag-orange">Admin Only</span>
+</div>
+
+<div class="content">
+  <!-- Users & RBAC -->
+  <div class="card mb-6">
+    <div class="flex-between mb-4">
+      <div class="card-title" style="margin:0">◈ System Users & RBAC</div>
+      <button class="btn btn-outline btn-sm" onclick="loadUsers()">↺ Refresh</button>
+    </div>
+    <div id="usersTable"><div class="text-muted">Loading…</div></div>
+  </div>
+
+  <!-- Index Management -->
+  <div class="card mb-6">
+    <div class="card-title">⚡ SQL Index Management</div>
+    <div class="alert alert-info mb-4">
+      Indexes target <code>WHERE</code>, <code>JOIN</code>, and <code>ORDER BY</code> clauses
+      on Booking, Trip, Driver, Passenger, Transaction, and Users tables.
+    </div>
+    <div id="indexStatus" class="mb-4"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-success" onclick="applyIndexes()">✓ Apply All Indexes</button>
+      <button class="btn btn-danger"  onclick="dropIndexes()">✕ Drop All Indexes</button>
+      <button class="btn btn-outline" onclick="location.href='/benchmark'">⚡ Go to Benchmark →</button>
+    </div>
+    <div class="mt-4" id="indexList"></div>
+  </div>
+
+  <!-- RBAC Groups -->
+  <div class="card">
+    <div class="card-title">▤ RBAC Group Summary</div>
+    <table>
+      <thead><tr><th>Group</th><th>Role</th><th>Permissions</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-orange mono">admin_group</span></td>
+          <td><span class="tag tag-orange">admin</span></td>
+          <td class="text-muted" style="font-size:.82rem">Full CRUD on all tables, user management, index control, audit logs, benchmark</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-blue mono">driver_group</span></td>
+          <td><span class="tag tag-gray">user</span></td>
+          <td class="text-muted" style="font-size:.82rem">View own profile, view assigned trips and their bookings</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-green mono">passenger_group</span></td>
+          <td><span class="tag tag-gray">user</span></td>
+          <td class="text-muted" style="font-size:.82rem">View/create/cancel own bookings, view own profile only</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Role Modal -->
+<div class="modal-overlay" id="roleModal">
+  <div class="modal">
+    <div class="modal-title">🔐 Change Role</div>
+    <p class="text-muted mb-4" style="font-size:.84rem">Changing a user's role affects their access across the system.</p>
+    <div class="form-group">
+      <label>New role for <span id="roleUsername" style="color:var(--orange)"></span></label>
+      <select class="form-control" id="newRole">
+        <option value="admin">admin — Full access</option>
+        <option value="user">user — Restricted access</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('roleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateRole()">Update Role</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentUID = null;
+
+async function loadUsers() {
+  const users = await apiFetch('/api/admin/users').catch(()=>[]);
+  if (!users.length) {
+    document.getElementById('usersTable').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">◈</div><p>No users found</p></div>';
+    return;
+  }
+  document.getElementById('usersTable').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Username</th><th>Role</th><th>Group</th><th>MemberID</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${users.map(u=>`<tr>
+          <td class="mono text-muted" style="font-size:.75rem">${u.UserID}</td>
+          <td style="font-weight:500;color:var(--cream)">${u.username}</td>
+          <td><span class="tag ${u.role==='admin'?'tag-orange':'tag-gray'}">${u.role}</span></td>
+          <td><span class="tag tag-gray mono" style="font-size:.65rem">${u.group_name||'—'}</span></td>
+          <td class="text-muted mono" style="font-size:.75rem">${u.MemberID||'—'}</td>
+          <td style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="openRoleModal(${u.UserID},'${u.username}','${u.role}')">Role</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteUser(${u.UserID},'${u.username}')">✕</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function openRoleModal(uid, uname, role) {
+  currentUID = uid;
+  document.getElementById('roleUsername').textContent = uname;
+  document.getElementById('newRole').value = role;
+  openModal('roleModal');
+}
+
+async function updateRole() {
+  const role = document.getElementById('newRole').value;
+  try {
+    await apiFetch(`/api/admin/users/${currentUID}/role`, {
+      method:'PUT', body: JSON.stringify({ role })
+    });
+    toast(`Role updated to ${role}`, 'success');
+    closeModal('roleModal');
+    loadUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteUser(uid, uname) {
+  if (!confirm(`Delete user "${uname}"?`)) return;
+  try {
+    await apiFetch(`/api/admin/users/${uid}`, { method:'DELETE' });
+    toast(`User ${uname} deleted`, 'success');
+    loadUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function checkIndexStatus() {
+  const s = await apiFetch('/api/indexes/status').catch(()=>({indexes:[]}));
+  const n = s.indexes.length;
+  document.getElementById('indexStatus').innerHTML = n > 0
+    ? `<span class="tag tag-green">✓ ${n} index(es) active</span>`
+    : `<span class="tag tag-red">✕ No indexes — full table scans in effect</span>`;
+  document.getElementById('indexList').innerHTML = n > 0
+    ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+        ${s.indexes.map(i=>`<span class="tag tag-gray mono" style="font-size:.65rem">${i}</span>`).join('')}
+       </div>`
+    : '';
+}
+
+async function applyIndexes() {
+  try {
+    const r = await apiFetch('/api/indexes/apply', { method:'POST' });
+    toast(r.message, 'success');
+    checkIndexStatus();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function dropIndexes() {
+  if (!confirm('Drop all indexes? Queries will revert to full table scans.')) return;
+  try {
+    const r = await apiFetch('/api/indexes/drop', { method:'POST' });
+    toast(r.message, 'success');
+    checkIndexStatus();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+loadUsers();
+checkIndexStatus();
+</script>
+{% endblock %}

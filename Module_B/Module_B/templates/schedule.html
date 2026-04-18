@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}{% if role == 'admin' %}Assignments{% else %}My Schedule{% endif %} – ShuttleGo{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>📋 {% if role == 'admin' %}All Driver Assignments{% else %}My Schedule{% endif %}</h1>
+  <span class="tag {% if role == 'admin' %}tag-orange{% else %}tag-blue{% endif %}">
+    {% if role == 'admin' %}Admin View{% else %}Driver View{% endif %}
+  </span>
+</div>
+
+<div class="content">
+
+  {% if role != 'admin' and group != 'driver_group' %}
+  <div class="alert alert-warn">This page is for drivers. Your account is not linked to a driver profile.</div>
+
+  {% else %}
+
+  <!-- ── Assignments ─────────────────────────────────────────────── -->
+  <div class="card mb-6">
+    <div class="flex-between mb-4">
+      <div class="card-title" style="margin:0">
+        {% if role == 'admin' %}All Assignments{% else %}My Shift Assignments{% endif %}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="form-control" id="filterStatus" onchange="loadAssignments()" style="width:160px">
+          <option value="">All Status</option>
+          <option value="Assigned">Assigned</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="loadAssignments()">↺</button>
+      </div>
+    </div>
+    <div id="assignmentsTable"><div class="text-muted">Loading…</div></div>
+  </div>
+
+  <!-- ── Vehicle Maintenance ─────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">
+      🔧 Vehicle Maintenance
+      {% if role != 'admin' %}
+      <span class="text-muted" style="font-size:.72rem;font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px">
+        — your assigned vehicles only
+      </span>
+      {% endif %}
+    </div>
+    {% if role != 'admin' %}
+    <div class="alert alert-info mb-4" style="margin-bottom:16px">
+      Showing service records for vehicles you are assigned to. Cost details are managed by admin.
+    </div>
+    {% endif %}
+    <div id="maintenanceTable"><div class="text-muted">Loading…</div></div>
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const IS_ADMIN = '{{ role }}' === 'admin';
+
+function assignmentStatusTag(s) {
+  const m = {Assigned:'tag-blue', Completed:'tag-green', Cancelled:'tag-red'};
+  return `<span class="tag ${m[s]||'tag-gray'}">${s}</span>`;
+}
+function tripStatusTag(s) {
+  const m = {InProgress:'tag-blue', Scheduled:'tag-yellow', Completed:'tag-green', Cancelled:'tag-red'};
+  return `<span class="tag ${m[s]||'tag-gray'}">${s}</span>`;
+}
+function maintenanceTag(s) {
+  const m = {Completed:'tag-green', Scheduled:'tag-blue', Pending:'tag-yellow'};
+  return `<span class="tag ${m[s]||'tag-gray'}">${s}</span>`;
+}
+
+async function loadAssignments() {
+  const statusFilter = document.getElementById('filterStatus')?.value || '';
+  const el = document.getElementById('assignmentsTable');
+  el.innerHTML = '<div class="text-muted">Loading…</div>';
+
+  let rows = await apiFetch('/api/my/assignments').catch(e => {
+    el.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    return null;
+  });
+  if (!rows) return;
+
+  if (statusFilter) rows = rows.filter(r => r.Status_ === statusFilter);
+
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No assignments found</p></div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <table>
+      <thead><tr>
+        ${IS_ADMIN ? '<th>Driver</th>' : ''}
+        <th>Route</th>
+        <th>Date</th>
+        <th>Shift</th>
+        <th>Vehicle</th>
+        <th>Trip Status</th>
+        <th>Assignment</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr>
+          ${IS_ADMIN ? `<td style="font-weight:500;color:var(--cream)">${r.DriverName}</td>` : ''}
+          <td>
+            <div style="font-weight:500;color:var(--cream)">${r.RouteName}</div>
+            <div class="text-muted" style="font-size:.75rem">${r.Source} → ${r.Destination}</div>
+          </td>
+          <td class="mono" style="font-size:.8rem">${r.TripDate}</td>
+          <td class="mono" style="font-size:.78rem;color:var(--cream-dim)">
+            ${r.ShiftStart} – ${r.ShiftEnd}
+          </td>
+          <td>
+            <div style="color:var(--cream)">${r.VehicleNumber}</div>
+            <div class="text-muted" style="font-size:.75rem">${r.Model}</div>
+          </td>
+          <td>${tripStatusTag(r.TripStatus)}</td>
+          <td>${assignmentStatusTag(r.Status_)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function loadMaintenance() {
+  const el = document.getElementById('maintenanceTable');
+  const records = await apiFetch('/api/my/maintenance').catch(e => {
+    el.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    return null;
+  });
+  if (!records) return;
+
+  if (!records.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔧</div><p>No maintenance records found</p></div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Vehicle</th>
+        <th>Service Type</th>
+        <th>Service Date</th>
+        <th>Next Due</th>
+        ${IS_ADMIN ? '<th>Cost (₹)</th>' : ''}
+        <th>Status</th>
+      </tr></thead>
+      <tbody>
+        ${records.map(r => `<tr>
+          <td>
+            <div style="color:var(--cream)">${r.VehicleNumber}</div>
+            <div class="text-muted" style="font-size:.75rem">${r.Model}</div>
+          </td>
+          <td>${r.ServiceType}</td>
+          <td class="mono" style="font-size:.78rem">${r.ServiceDate}</td>
+          <td class="mono" style="font-size:.78rem;color:${isOverdue(r.NextServiceDue)?'var(--danger)':'var(--cream-dim)'}">
+            ${r.NextServiceDue}
+            ${isOverdue(r.NextServiceDue) ? '<span class="tag tag-red" style="margin-left:4px;font-size:.6rem">OVERDUE</span>' : ''}
+          </td>
+          ${IS_ADMIN ? `<td class="mono" style="color:var(--cream)">₹${Number(r.Cost).toLocaleString()}</td>` : ''}
+          <td>${maintenanceTag(r.Status_)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function isOverdue(dateStr) {
+  return new Date(dateStr) < new Date();
+}
+
+loadAssignments();
+loadMaintenance();
+</script>
+{% endblock %}

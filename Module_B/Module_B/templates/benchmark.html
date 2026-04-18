@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Benchmark – ShuttleGo{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>⚡ SQL Benchmark</h1>
+  <span class="tag tag-orange">Admin Only</span>
+</div>
+
+<div class="content">
+  <div class="alert alert-info mb-6">
+    Each query runs <strong>200×</strong> and avg/min/max execution time is recorded.
+    Drop indexes → run → apply indexes → run again to compare before/after.
+    <code>EXPLAIN QUERY PLAN</code> shows whether SQLite uses an index seek or a full scan.
+  </div>
+
+  <!-- Controls -->
+  <div class="card mb-6">
+    <div class="flex-between">
+      <div>
+        <div class="card-title" style="margin-bottom:6px">Index Status</div>
+        <div id="idxStatus" class="text-muted mono" style="font-size:.75rem">Checking…</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-success btn-sm" onclick="applyIdx()">✓ Apply Indexes</button>
+        <button class="btn btn-danger btn-sm"  onclick="dropIdx()">✕ Drop Indexes</button>
+        <button class="btn btn-primary" id="runBtn" onclick="runBenchmark()">▶ Run Benchmark</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSection" style="display:none">
+    <div class="flex-between mb-4">
+      <div class="card-title" style="margin:0;font-size:.9rem">Results</div>
+      <div id="idxBadge"></div>
+    </div>
+
+    <div class="card mb-6">
+      <div class="card-title">Execution Time Summary</div>
+      <table id="summaryTable">
+        <thead><tr>
+          <th>Query</th><th>Avg (ms)</th><th>Min (ms)</th><th>Max (ms)</th><th>Access Plan</th>
+        </tr></thead>
+        <tbody id="summaryBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card mb-6">
+      <div class="card-title">EXPLAIN QUERY PLAN Output</div>
+      <div id="planDetails"></div>
+    </div>
+  </div>
+
+  <!-- Before/After comparison -->
+  <div class="card" id="compareCard" style="display:none">
+    <div class="card-title">Before vs After Comparison</div>
+    <div id="compareTable"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let prevResults = null;
+
+async function checkIdxStatus() {
+  const s = await apiFetch('/api/indexes/status').catch(()=>({indexes:[]}));
+  const n = s.indexes.length;
+  document.getElementById('idxStatus').innerHTML = n > 0
+    ? `<span class="tag tag-green">✓ ${n} indexes active</span>`
+    : `<span class="tag tag-red">✕ No indexes — full table scans expected</span>`;
+}
+
+async function applyIdx() {
+  await apiFetch('/api/indexes/apply', { method:'POST' });
+  toast('Indexes applied', 'success');
+  checkIdxStatus();
+}
+async function dropIdx() {
+  await apiFetch('/api/indexes/drop', { method:'POST' });
+  toast('Indexes dropped', 'success');
+  checkIdxStatus();
+}
+
+async function runBenchmark() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Running…';
+
+  try {
+    const data = await apiFetch('/api/benchmark/run', { method:'POST' });
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('idxBadge').innerHTML = data.indexes_active
+      ? '<span class="tag tag-green">Indexes: ON</span>'
+      : '<span class="tag tag-red">Indexes: OFF</span>';
+
+    const rows = Object.entries(data.results);
+    document.getElementById('summaryBody').innerHTML = rows.map(([k,r])=>`<tr>
+      <td style="font-size:.8rem;color:var(--cream-dim)">${r.label}</td>
+      <td class="mono" style="color:var(--cream)"><strong>${r.avg_ms}</strong></td>
+      <td class="mono text-muted">${r.min_ms}</td>
+      <td class="mono text-muted">${r.max_ms}</td>
+      <td><span class="tag ${r.scan_type.includes('INDEX')?'tag-green':'tag-red'}">${r.scan_type}</span></td>
+    </tr>`).join('');
+
+    document.getElementById('planDetails').innerHTML = rows.map(([k,r])=>`
+      <div style="margin-bottom:18px">
+        <div style="font-family:var(--mono);font-size:.72rem;color:var(--orange);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">${r.label}</div>
+        <pre>${r.plan.map(p=>JSON.stringify(p)).join('\n')}</pre>
+      </div>`).join('<hr class="sep">');
+
+    if (prevResults) {
+      document.getElementById('compareCard').style.display = 'block';
+      document.getElementById('compareTable').innerHTML = `
+        <table>
+          <thead><tr>
+            <th>Query</th><th>Before</th><th>After</th><th>Change</th><th>Before Plan</th><th>After Plan</th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(([k,r])=>{
+              const p = prevResults[k]; if(!p) return '';
+              const diff = r.avg_ms - p.avg_ms;
+              const pct  = p.avg_ms > 0 ? ((diff/p.avg_ms)*100).toFixed(1) : '—';
+              const cls  = diff < 0 ? 'tag-green' : diff > 0 ? 'tag-red' : 'tag-gray';
+              return `<tr>
+                <td style="font-size:.78rem;color:var(--cream-dim)">${r.label}</td>
+                <td class="mono">${p.avg_ms} ms</td>
+                <td class="mono">${r.avg_ms} ms</td>
+                <td><span class="tag ${cls}">${diff<0?'▼':'▲'} ${Math.abs(pct)}%</span></td>
+                <td><span class="tag ${p.scan_type.includes('INDEX')?'tag-green':'tag-red'}" style="font-size:.6rem">${p.scan_type}</span></td>
+                <td><span class="tag ${r.scan_type.includes('INDEX')?'tag-green':'tag-red'}" style="font-size:.6rem">${r.scan_type}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    prevResults = data.results;
+    toast('Benchmark complete', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+
+  btn.disabled = false;
+  btn.innerHTML = '▶ Run Again';
+}
+
+checkIdxStatus();
+</script>
+{% endblock %}

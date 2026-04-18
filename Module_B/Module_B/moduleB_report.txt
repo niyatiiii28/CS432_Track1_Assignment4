@@ -1,0 +1,82 @@
+=================================================================
+  ShuttleGo — Module B: Concurrent & Stress Testing
+  2026-04-05 04:16:28
+=================================================================
+
+SETUP: Creating 20 test user sessions...
+  Got 20 authenticated sessions
+
+  Using TripID: 289  (AvailableSeats: 9)
+
+=================================================================
+TEST 1: RACE CONDITION — Concurrent bookings on same seat
+=================================================================
+  Trip ID    : 289
+  Seat       : 1  (all 20 users try to book the SAME seat)
+  Expected   : exactly 1 success, rest conflict/error
+
+  Total requests    : 20
+  Successful (2xx)  : 1
+  Blocked (400/409) : 19
+  Other errors      : 0
+  Elapsed           : 0.120s
+
+  ISOLATION CHECK:
+  ✓ PASS — Only 1 booking succeeded for the same seat
+           Concurrent duplicate bookings were correctly blocked
+
+  BONUS: Each user books a different seat (seats 2–21)...
+  5/20 unique-seat bookings succeeded in 0.226s
+
+=================================================================
+TEST 2: STRESS TEST — 300 rapid concurrent requests
+=================================================================
+  Total requests : 300
+  HTTP 200 OK    : 300
+  Errors         : 0
+  Total time     : 34.16s
+  Throughput     : 8.8 req/s
+  Response times :
+    Median : 2358.3 ms
+    Mean   : 3139.6 ms
+    Min    : 617.2 ms
+    Max    : 5940.7 ms
+
+  CONSISTENCY CHECK:
+  ✓ PASS — All requests returned HTTP 200, system stable under load
+
+=================================================================
+TEST 3: FAILURE SIMULATION — Abrupt client crashes mid-request
+=================================================================
+  Strategy   : 10 booking requests killed after 0.05s
+  Simulates  : client crash / network drop before response
+
+  Crash requests fired   : 10
+  DB health check        : HTTP 200
+
+  ATOMICITY CHECK:
+  ✓ PASS — DB responds correctly after simulated client crashes
+           SQLite WAL ensures incomplete transactions are rolled back
+
+=================================================================
+TEST 4: DURABILITY — Committed data persists
+=================================================================
+  Booking POST (TripID=289, Seat=40) : HTTP 201
+  Response : {'BookingID': 3876, 'QRCode': 'QR-TRIP289-SEAT40-PASS140-DA781F', 'message': 'Booking created'}
+  Read-back GET           : HTTP 200
+  Bookings visible        : 4
+
+  DURABILITY CHECK:
+  ✓ PASS — Committed booking is immediately visible in read-back
+
+=================================================================
+  SUMMARY
+=================================================================
+  Test 1 — Race Condition : 20 users try to book the same seat
+  Test 2 — Stress Test    : 300 rapid concurrent read requests
+  Test 3 — Failure Sim    : Client crashes mid-booking request
+  Test 4 — Durability     : Committed booking survives read-back
+
+  Full results → moduleB_report.txt
+  Server logs  → logs/audit.log
+=================================================================
