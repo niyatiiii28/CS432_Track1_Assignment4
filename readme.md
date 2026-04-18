@@ -1,4 +1,4 @@
-# CS 432 – Databases | Track 1 | Assignment 3
+# CS 432 – Databases | Track 1 | Assignment 4
 ## ShuttleGo – Shuttle Management and Booking System
 
 **Course:** CS 432 – Databases | Semester II (2025–2026)  
@@ -17,13 +17,13 @@
 
 
 
-## 📌 Overview
+##  Overview
 
 This project extends the **ShuttleGo** system to a distributed architecture using **MySQL sharding**. Data is partitioned across three shards to ensure high availability and scalability.
 
 ---
 
-## 🧠 Sharding Logic
+##  Sharding Logic
 
 We use **Hash-based partitioning** to ensure balanced data distribution.
 
@@ -36,7 +36,7 @@ $$\text{shard\_id} = \text{MemberID} \mod 3$$
 
 ---
 
-## 🗂️ Project Structure
+##  Project Structure
 
 ```
 Module_B/
@@ -63,7 +63,7 @@ Distributed across **all shards** based on `MemberID`.
 - `BookingCancellation` / `NoShowPenalty`
 - `users` / `group_mappings`
 
-### 🔹 Global Tables
+###  Global Tables
 Stored exclusively in **Shard 0** *(Primary Reference Shard)*.
 
 - `Vehicle`
@@ -73,7 +73,7 @@ Stored exclusively in **Shard 0** *(Primary Reference Shard)*.
 
 ---
 
-## ⚙️ Setup & Installation
+##  Setup & Installation
 
 ### 1. Activate Environment
 
@@ -105,7 +105,7 @@ python moduleB_stress_test.py
 
 ---
 
-## 🔀 Query Routing Rules
+##  Query Routing Rules
 
 | Query Type | Execution Logic |
 |---|---|
@@ -118,7 +118,7 @@ python moduleB_stress_test.py
 
 ---
 
-## 📊 Notes
+##  Notes
 
 - **Balanced Distribution:** Hash-based routing prevents "hot shards."
 - **Global Table Strategy:** Static reference data is centralized in Shard 0 to maintain referential integrity without complexity.
