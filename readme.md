@@ -30,7 +30,7 @@ We use **Hash-based partitioning** to ensure balanced data distribution.
 - **Shard Key:** `MemberID`
 - **Routing Logic:**
 
-$$\text{shard\_id} = \text{MemberID} \mod 3$$
+shard_id = MemberID % 3
 
 - **Shards:** MySQL instances running on ports `3307`, `3308`, and `3309`.
 
